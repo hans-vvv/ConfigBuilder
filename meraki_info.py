@@ -1,7 +1,7 @@
 from collections import defaultdict
 from functools import cached_property
 
-import openpyxl
+from openpyxl import load_workbook
 
 import meraki
 from meraki.exceptions import APIError
@@ -18,15 +18,29 @@ class MerakiInfo:
     """
 
     WORKBOOK_NAME = 'result.xlsx'
+    DYNAMIC_SHEETS = ['Static bindings', 'Reserved ranges', 'Static routes']
 
-    def __init__(self):
+    def __init__(self, get_meraki_data=True):
+
+        self.get_meraki_data = get_meraki_data
         self.dashboard = None
-        self.wb = openpyxl.Workbook()
+        self.wb = None
 
-        self._create_meraki_dashboard_api()
+        if self.get_meraki_data is True:
+            self._create_meraki_dashboard_api()
+            self.remove_dynamic_sheets()
 
     def _create_meraki_dashboard_api(self):
         self.dashboard = meraki.DashboardAPI(api_key=API_KEY, print_console=False, suppress_logging=True)
+
+    def remove_dynamic_sheets(self):
+
+        self.wb = load_workbook(self.WORKBOOK_NAME)
+        for sheet_name in self.DYNAMIC_SHEETS:
+            if sheet_name in self.wb.sheetnames:
+                sheet = self.wb[sheet_name]
+                self.wb.remove(sheet)
+        self._excel_save()
 
     @cached_property
     def _get_network_id_by_name_cache(self):
@@ -39,7 +53,7 @@ class MerakiInfo:
                 cache[network['name']] = network['id']
         return cache
 
-    def get_network_id_by_name(self, network_name):
+    def _get_network_id_by_name(self, network_name):
         return self._get_network_id_by_name_cache[network_name]
 
     @cached_property
@@ -48,7 +62,7 @@ class MerakiInfo:
         cache = {}
         network_names = self._get_network_names
         for network_name in network_names:
-            network_id = self.get_network_id_by_name(network_name)
+            network_id = self._get_network_id_by_name(network_name)
             try:
                 static_routes = self.dashboard.appliance.getNetworkApplianceStaticRoutes(network_id)
                 cache[network_name] = static_routes
@@ -77,10 +91,16 @@ class MerakiInfo:
 
         return result
 
-    def print_fixed_ip_assignments_to_excel_tab(self, sheet_name):
+    def print_fixed_ip_assignments_to_excel_tab(self):
+
+        if self.get_meraki_data is False:
+            return
+
+        sheet_name = 'Static bindings'
 
         fixed_ip_assignments = self._get_fixed_ip_assignments()
 
+        self.wb = load_workbook(self.WORKBOOK_NAME)
         self.wb.create_sheet(sheet_name)
         sheet = self.wb[sheet_name]
 
@@ -129,20 +149,26 @@ class MerakiInfo:
         # print(result)
         return result
 
-    def print_reserved_ip_ranges_to_excel_tab(self, sheet_name):
+    def print_reserved_ip_ranges_to_excel_tab(self):
+
+        if self.get_meraki_data is False:
+            return
+
+        sheet_name = 'Reserved ranges'
 
         reserved_ip_ranges = self._get_reserved_ip_ranges()
 
+        self.wb = load_workbook(self.WORKBOOK_NAME)
         self.wb.create_sheet(sheet_name)
         sheet = self.wb[sheet_name]
 
         index = 0
         sheet[xlref(0, 0)] = 'Network Name'
         sheet[xlref(0, 1)] = 'Subnet Name'
-        sheet[xlref(0, 2)] = 'Start'
-        sheet[xlref(0, 3)] = 'End'
-        sheet[xlref(0, 4)] = 'Start'
-        sheet[xlref(0, 5)] = 'End'
+        sheet[xlref(0, 2)] = 'Start1'
+        sheet[xlref(0, 3)] = 'End1'
+        sheet[xlref(0, 4)] = 'Start2'
+        sheet[xlref(0, 5)] = 'End2'
         sheet[xlref(0, 6)] = 'Enabled'
 
         for network_name in reserved_ip_ranges:
@@ -177,16 +203,22 @@ class MerakiInfo:
                     result[network_name][route['name']]['enabled'] = route['enabled']
         return result
 
-    def print_static_routes_to_excel_tab(self, sheet_name):
+    def print_static_routes_to_excel_tab(self):
+
+        if self.get_meraki_data is False:
+            return
+
+        sheet_name = 'Static routes'
 
         static_routes = self._get_static_routes()
 
+        self.wb = load_workbook(self.WORKBOOK_NAME)
         self.wb.create_sheet(sheet_name)
         sheet = self.wb[sheet_name]
 
         index = 0
-        sheet[xlref(0, 0)] = 'Network name'
-        sheet[xlref(0, 1)] = 'Subnet name'
+        sheet[xlref(0, 0)] = 'Network Name'
+        sheet[xlref(0, 1)] = 'Subnet Name'
         sheet[xlref(0, 2)] = 'Subnet'
         sheet[xlref(0, 3)] = 'Enabled'
 
