@@ -1,4 +1,5 @@
 from collections import defaultdict
+from dataclasses import dataclass
 from typing import Dict, Any
 import ipaddress
 
@@ -26,7 +27,7 @@ class ConfigGenerator:
         self._read_all_tabs()
         self._merge_data_in_config_tree()
 
-    def _read_all_tabs(self):
+    def _read_all_tabs(self) -> None:
 
         self.raw_excel_data['dhcp_options'] = self._get_dhcp_options_template_data()
         self.raw_excel_data['static_bindings'] = self._get_static_bindings_data()
@@ -35,7 +36,7 @@ class ConfigGenerator:
         self.raw_excel_data['dhcp_info'] = self._get_dhcp_info_data()
         self.raw_excel_data['name_server'] = self._get_name_server_data()
 
-    def _merge_data_in_config_tree(self):
+    def _merge_data_in_config_tree(self) -> None:
 
         self._initialize_static_routes_subtrees()
         self._merge_static_bindings_in_config_tree()
@@ -45,7 +46,7 @@ class ConfigGenerator:
         # print(self._get_dhcp_options('8'))
         # print(self._get_name_servers('1'))
 
-    def _get_dhcp_options_template_data(self):
+    def _get_dhcp_options_template_data(self) -> list[dataclass]:
         """
         Returns DHCP options templates as list of data class objects
         """
@@ -58,7 +59,7 @@ class ConfigGenerator:
         ]
         return read_excel_tab(self.wb, 'DHCP options templates', fields)
 
-    def _get_static_bindings_data(self):
+    def _get_static_bindings_data(self) -> list[dataclass]:
         """
         Returns Static bindings as list of data class objects
         """
@@ -68,7 +69,7 @@ class ConfigGenerator:
         ]
         return read_excel_tab(self.wb, 'Static bindings', fields)
 
-    def _get_reserved_ranges_data(self):
+    def _get_reserved_ranges_data(self) -> list[dataclass]:
         """
         Returns Reserved ranges as list of data class objects
         """
@@ -78,7 +79,7 @@ class ConfigGenerator:
         ]
         return read_excel_tab(self.wb, 'Reserved ranges', fields)
 
-    def _get_static_routes_data(self):
+    def _get_static_routes_data(self) -> list[dataclass]:
         """
         Returns Static Routes as list of data class objects
         """
@@ -88,7 +89,7 @@ class ConfigGenerator:
         ]
         return read_excel_tab(self.wb, 'Static routes', fields)
 
-    def _get_dhcp_info_data(self):
+    def _get_dhcp_info_data(self) -> list[dataclass]:
         """
         Returns DHCP info as list of data class objects
         """
@@ -98,7 +99,7 @@ class ConfigGenerator:
         ]
         return read_excel_tab(self.wb, 'DHCP info', fields)
 
-    def _get_name_server_data(self):
+    def _get_name_server_data(self) -> list[dataclass]:
         """
         Returns Name server info as list of data class objects
         """
@@ -107,25 +108,31 @@ class ConfigGenerator:
         ]
         return read_excel_tab(self.wb, 'Name server templates', fields)
 
-    def _initialize_static_routes_subtrees(self):
+    def _initialize_static_routes_subtrees(self) -> None:
 
         for row in self.raw_excel_data['static_routes']:
             head = self.config_tree['networks'][row.network_name]['static_routes']
             result = {'name': row.subnet_name, 'subnet': row.subnet, 'enabled': row.enabled}
             head[row.subnet_name] = result
 
-    def _merge_static_bindings_in_config_tree(self):
+    def _merge_static_bindings_in_config_tree(self) -> None:
 
         bindings = defaultdict(list)
         for row in self.raw_excel_data['static_bindings']:
-            bindings[row.subnet_name].append((row.ip, row.mac, row.description))
+            bindings[row.subnet_name].append(
+                {
+                    'ip': row.ip,
+                    'mac': row.mac,
+                    'description': row.description
+                 }
+            )
 
         for network_name in self.config_tree['networks']:
             for subnet_name in self.config_tree['networks'][network_name]['static_routes']:
                 head = self.config_tree['networks'][network_name]['static_routes'][subnet_name]
                 head.update({'static_bindings': bindings[subnet_name]})
 
-    def _merge_reserved_ranges_in_config_tree(self):
+    def _merge_reserved_ranges_in_config_tree(self) -> None:
 
         reserved_ranges = defaultdict(list)
         for row in self.raw_excel_data['reserved_ranges']:
@@ -140,7 +147,7 @@ class ConfigGenerator:
                 head = self.config_tree['networks'][network_name]['static_routes'][subnet_name]
                 head.update({'reserved_ranges': reserved_ranges[subnet_name]})
 
-    def _get_dhcp_options(self, template):
+    def _get_dhcp_options(self, template) -> list[dict]:
 
         result = []
         for row in self.raw_excel_data['dhcp_options']:
@@ -155,13 +162,13 @@ class ConfigGenerator:
                 result.append({'code': row.c4, 'type': row.t4, 'value': row.v4})
         return result
 
-    def _get_name_servers(self, template):
+    def _get_name_servers(self, template) -> list[str]:
         for row in self.raw_excel_data['name_server']:
             if template != row.template:
                 continue
             return row.name_servers.split(',')
 
-    def _merge_dhcp_info_in_config_tree(self):
+    def _merge_dhcp_info_in_config_tree(self) -> None:
 
         for row in self.raw_excel_data['dhcp_info']:
             if row.gwip is None:
@@ -193,9 +200,9 @@ class ConfigGenerator:
             head.update({'dhcp_info': dhcp_info})
 
     @staticmethod
-    def _get_subnet_details(subnet_str):
+    def _get_subnet_details(subnet: str) -> dict:
         try:
-            network = ipaddress.ip_network(subnet_str, strict=False)
+            network = ipaddress.ip_network(subnet, strict=False)
             hosts = list(network.hosts())
 
             return {
@@ -221,7 +228,7 @@ class ConfigGenerator:
 
         return j2template.render(**kwargs)
 
-    def _parse_subtree(self, subtree):
+    def _parse_subtree(self, subtree: Tree) -> str:
         """
         Wrapper to print configuration based on provide subtree
         """

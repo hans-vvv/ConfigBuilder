@@ -1,3 +1,4 @@
+from typing import Any, Union
 from collections import defaultdict
 from functools import cached_property
 
@@ -13,14 +14,14 @@ from utils import xlref, custom_layout_sheet
 class MerakiInfo:
 
     """
-    This class exposes methods to get network information out of the Meraki SD-WAN solution using REST API
-    and HTTP scraping if REST API is not sufficient and prints the data in an Excel file.
+    This class exposes methods to get network information out of the Meraki SD-WAN solution using
+    Python SDK and prints data in Excel format.
     """
 
     WORKBOOK_NAME = 'result.xlsx'
     DYNAMIC_SHEETS = ['Static bindings', 'Reserved ranges', 'Static routes']
 
-    def __init__(self, get_meraki_data=True):
+    def __init__(self, get_meraki_data: bool = True) -> None:
 
         self.get_meraki_data = get_meraki_data
         self.dashboard = None
@@ -33,7 +34,7 @@ class MerakiInfo:
     def _create_meraki_dashboard_api(self):
         self.dashboard = meraki.DashboardAPI(api_key=API_KEY, print_console=False, suppress_logging=True)
 
-    def remove_dynamic_sheets(self):
+    def remove_dynamic_sheets(self) -> None:
 
         self.wb = load_workbook(self.WORKBOOK_NAME)
         for sheet_name in self.DYNAMIC_SHEETS:
@@ -43,7 +44,7 @@ class MerakiInfo:
         self._excel_save()
 
     @cached_property
-    def _get_network_id_by_name_cache(self):
+    def _get_network_id_by_name_cache(self) -> dict[str, int]:
 
         cache = {}
         orgs = self.dashboard.organizations.getOrganizations()
@@ -53,11 +54,11 @@ class MerakiInfo:
                 cache[network['name']] = network['id']
         return cache
 
-    def _get_network_id_by_name(self, network_name):
+    def _get_network_id_by_name(self, network_name: str) -> int:
         return self._get_network_id_by_name_cache[network_name]
 
     @cached_property
-    def _get_network_appliance_static_routes_cache(self):
+    def _get_network_appliance_static_routes_cache(self) -> dict[str, Any]:
 
         cache = {}
         network_names = self._get_network_names
@@ -70,28 +71,30 @@ class MerakiInfo:
                 pass
         return cache
 
-    def _get_fixed_ip_assignments(self):
+    def _get_fixed_ip_assignments(self) -> (
+            defaultdict)[str, defaultdict[str, defaultdict[str, dict[str, Union[str, bool]]]]]:
         result = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
         network_names = self._get_network_names
         for network_name in network_names:
             subnets = self._get_network_appliance_static_routes_cache.get(network_name)
-            if subnets:
-                for subnet in subnets:
-                    # print(subnet)
-                    subnet_name = subnet.get('name')
-                    enabled = subnet.get('enabled')
-                    fixed_assignments = subnet.get('fixedIpAssignments')
-                    if fixed_assignments:
-                        for mac, vals in fixed_assignments.items():
-                            fixed_ip = vals['ip']
-                            name = vals['name']
-                            result[network_name][subnet_name][fixed_ip]['mac'] = mac
-                            result[network_name][subnet_name][fixed_ip]['name'] = name
-                            result[network_name][subnet_name][fixed_ip]['enabled'] = enabled
-
+            if not subnets:
+                continue
+            for subnet in subnets:
+                # print(subnet)
+                subnet_name = subnet.get('name')
+                enabled = subnet.get('enabled')
+                fixed_assignments = subnet.get('fixedIpAssignments')
+                if not fixed_assignments:
+                    continue
+                for mac, vals in fixed_assignments.items():
+                    fixed_ip = vals['ip']
+                    name = vals['name']
+                    result[network_name][subnet_name][fixed_ip]['mac'] = mac
+                    result[network_name][subnet_name][fixed_ip]['name'] = name
+                    result[network_name][subnet_name][fixed_ip]['enabled'] = enabled
         return result
 
-    def print_fixed_ip_assignments_to_excel_tab(self):
+    def print_fixed_ip_assignments_to_excel_tab(self) -> None:
 
         if self.get_meraki_data is False:
             return
@@ -130,26 +133,28 @@ class MerakiInfo:
         custom_layout_sheet(sheet)
         self._excel_save()
 
-    def _get_reserved_ip_ranges(self):
+    def _get_reserved_ip_ranges(self) -> defaultdict[str, defaultdict[str, defaultdict[str, list[Union[dict, str]]]]]:
 
         result = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
         network_names = self._get_network_names
         for network_name in network_names:
             subnets = self._get_network_appliance_static_routes_cache.get(network_name)
-            if subnets:
-                for subnet in subnets:
-                    # print(subnet)
-                    enabled = subnet.get('enabled')
-                    subnet_name = subnet.get('name')
-                    reserved_ip_ranges = subnet.get('reservedIpRanges')
-                    if reserved_ip_ranges:
-                        for reserved_ip_range in reserved_ip_ranges:
-                            result[network_name][subnet_name]['res'].append(reserved_ip_range)
-                    result[network_name][subnet_name]['enabled'].append(enabled)
+            if not subnets:
+                continue
+            for subnet in subnets:
+                # print(subnet)
+                enabled = subnet.get('enabled')
+                subnet_name = subnet.get('name')
+                reserved_ip_ranges = subnet.get('reservedIpRanges')
+                if not reserved_ip_ranges:
+                    continue
+                for reserved_ip_range in reserved_ip_ranges:
+                    result[network_name][subnet_name]['res'].append(reserved_ip_range)
+                result[network_name][subnet_name]['enabled'].append(enabled)
         # print(result)
         return result
 
-    def print_reserved_ip_ranges_to_excel_tab(self):
+    def print_reserved_ip_ranges_to_excel_tab(self) -> None:
 
         if self.get_meraki_data is False:
             return
@@ -191,7 +196,7 @@ class MerakiInfo:
         custom_layout_sheet(sheet)
         self._excel_save()
 
-    def _get_static_routes(self):
+    def _get_static_routes(self) -> defaultdict[str, defaultdict[str, dict[str, Union[str, bool]]]]:
 
         result = defaultdict(lambda: defaultdict(dict))
         network_names = self._get_network_names
@@ -203,7 +208,7 @@ class MerakiInfo:
                     result[network_name][route['name']]['enabled'] = route['enabled']
         return result
 
-    def print_static_routes_to_excel_tab(self):
+    def print_static_routes_to_excel_tab(self) -> None:
 
         if self.get_meraki_data is False:
             return
@@ -233,7 +238,7 @@ class MerakiInfo:
         self._excel_save()
 
     @cached_property
-    def _get_network_names(self):
+    def _get_network_names(self) -> list[str]:
         network_names = []
         orgs = self.dashboard.organizations.getOrganizations()
         for org in orgs:
@@ -242,5 +247,5 @@ class MerakiInfo:
                 network_names.append(network['name'])
         return network_names
 
-    def _excel_save(self):
+    def _excel_save(self) -> None:
         self.wb.save(self.WORKBOOK_NAME)

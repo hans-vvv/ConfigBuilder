@@ -43,10 +43,10 @@ config system dhcp server
         config reserved-address
 {% for item in subnet_items.static_bindings %}
             edit {{loop.index}}
-                set ip {{ item[0] }}
-                set mac {{ item[1] }}
-{% if item[2] %}
-                set mac {{ item[2] }}
+                set ip {{ item.ip }}
+                set mac {{ item.mac }}
+{% if item.description %}
+                set description "{{ item.description }}"
 {% endif %}
             next
  {% if loop.last %}
