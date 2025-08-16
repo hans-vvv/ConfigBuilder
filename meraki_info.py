@@ -1,251 +1,127 @@
-from typing import Any, Union
-from collections import defaultdict
-from functools import cached_property
-
-from openpyxl import load_workbook
+import json
+from typing import Optional
+from dataclasses import dataclass, field
 
 import meraki
-from meraki.exceptions import APIError
 
-from credentials import API_KEY
-from utils import xlref, custom_layout_sheet
+import pandas as pd
+from pathlib import Path
 
 
-class MerakiInfo:
+@dataclass
+class StaticRoute:
+    network_id: str
+    network_name: str
+    name: str
+    subnet: str
+    gateway_ip: str
+    enabled: bool
+    fixed_ip_assignments: Optional[dict] = field(default_factory=dict)
+    reserved_ip_ranges: Optional[list] = field(default_factory=list)
+    comment: Optional[str] = None
 
-    """
-    This class exposes methods to get network information out of the Meraki SD-WAN solution using
-    Python SDK and prints data in Excel format.
-    """
 
-    WORKBOOK_NAME = 'result.xlsx'
-    DYNAMIC_SHEETS = ['Static bindings', 'Reserved ranges', 'Static routes']
+class MerakiApiManager:
 
-    def __init__(self, get_meraki_data: bool = True) -> None:
-
-        self.get_meraki_data = get_meraki_data
+    def __init__(self):
         self.dashboard = None
-        self.wb = None
+        self._all_structured_routes = None  # cache for static routes
 
-        if self.get_meraki_data is True:
-            self._create_meraki_dashboard_api()
-            self.remove_dynamic_sheets()
+    def initialize(self, api_key, print_console=False, suppress_logging=True):
+        self.dashboard = meraki.DashboardAPI(
+            api_key=api_key, print_console=print_console, suppress_logging=suppress_logging,
+        )
 
-    def _create_meraki_dashboard_api(self):
-        self.dashboard = meraki.DashboardAPI(api_key=API_KEY, print_console=False, suppress_logging=True)
+    def get_structured_static_routes(self) -> list[StaticRoute]:
+        if not self.dashboard:
+            raise RuntimeError("Meraki dashboard client not initialized. Call initialize() first.")
 
-    def remove_dynamic_sheets(self) -> None:
+        if self._all_structured_routes is not None:
+            return self._all_structured_routes
 
-        self.wb = load_workbook(self.WORKBOOK_NAME)
-        for sheet_name in self.DYNAMIC_SHEETS:
-            if sheet_name in self.wb.sheetnames:
-                sheet = self.wb[sheet_name]
-                self.wb.remove(sheet)
-        self._excel_save()
+        all_structured_routes = []
 
-    @cached_property
-    def _get_network_id_by_name_cache(self) -> dict[str, int]:
+        try:
+            orgs = self.dashboard.organizations.getOrganizations()
+            for org in orgs:
+                networks = self.dashboard.organizations.getOrganizationNetworks(org['id'])
+                for network in networks:
+                    network_id = network['id']
+                    network_name = network.get('name', '')
 
-        cache = {}
-        orgs = self.dashboard.organizations.getOrganizations()
-        for org in orgs:
-            networks = self.dashboard.organizations.getOrganizationNetworks(org['id'])
-            for network in networks:
-                cache[network['name']] = network['id']
-        return cache
+                    try:
+                        routes = self.dashboard.appliance.getNetworkApplianceStaticRoutes(network_id)
+                        for route in routes:
+                            all_structured_routes.append(
+                                StaticRoute(
+                                    network_id=network_id,
+                                    network_name=network_name,
+                                    name=route.get('name', ''),
+                                    subnet=route.get('subnet', ''),
+                                    gateway_ip=route.get('gatewayIp', ''),
+                                    enabled=route.get('enabled', True),
+                                    fixed_ip_assignments=route.get('fixedIpAssignments', {}),
+                                    reserved_ip_ranges=route.get('reservedIpRanges', []),
+                                    comment=route.get('comment', None)
+                                )
+                            )
+                    except Exception as e:
+                        print(f"Error retrieving routes for {network_name} ({network_id}): {e}")
 
-    def _get_network_id_by_name(self, network_name: str) -> int:
-        return self._get_network_id_by_name_cache[network_name]
+        except Exception as e:
+            print(f"Error fetching organizations or networks: {e}")
 
-    @cached_property
-    def _get_network_appliance_static_routes_cache(self) -> dict[str, Any]:
+        self._all_structured_routes = all_structured_routes  # cache
+        return all_structured_routes
 
-        cache = {}
-        network_names = self._get_network_names
-        for network_name in network_names:
-            network_id = self._get_network_id_by_name(network_name)
-            try:
-                static_routes = self.dashboard.appliance.getNetworkApplianceStaticRoutes(network_id)
-                cache[network_name] = static_routes
-            except APIError:
-                pass
-        return cache
 
-    def _get_fixed_ip_assignments(self) -> (
-            defaultdict)[str, defaultdict[str, defaultdict[str, dict[str, Union[str, bool]]]]]:
-        result = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
-        network_names = self._get_network_names
-        for network_name in network_names:
-            subnets = self._get_network_appliance_static_routes_cache.get(network_name)
-            if not subnets:
-                continue
-            for subnet in subnets:
-                # print(subnet)
-                subnet_name = subnet.get('name')
-                enabled = subnet.get('enabled')
-                fixed_assignments = subnet.get('fixedIpAssignments')
-                if not fixed_assignments:
-                    continue
-                for mac, vals in fixed_assignments.items():
-                    fixed_ip = vals['ip']
-                    name = vals['name']
-                    result[network_name][subnet_name][fixed_ip]['mac'] = mac
-                    result[network_name][subnet_name][fixed_ip]['name'] = name
-                    result[network_name][subnet_name][fixed_ip]['enabled'] = enabled
-        return result
+class MerakiExcelExporter:
+    def __init__(self, routes: list[StaticRoute]):
+        self.routes = routes
 
-    def print_fixed_ip_assignments_to_excel_tab(self) -> None:
+    def export_to_excel(self, filepath: str | Path):
+        filepath = Path(filepath)
+        print(f"Exporting to {filepath.resolve()}...")
 
-        if self.get_meraki_data is False:
-            return
+        # Sheet 1: All Routes (with properly expanded values)
+        df_all_routes = pd.DataFrame([
+            {
+                'Network Name': r.network_name,
+                'Route Name': r.name,
+                'Subnet': r.subnet,
+                'Enabled': r.enabled,
+            }
+            for r in self.routes
+        ])
 
-        sheet_name = 'Static bindings'
+        # Sheet 2: Fixed IPs
+        reservation_rows = []
+        for r in self.routes:
+            for mac, info in r.fixed_ip_assignments.items():
+                reservation_rows.append({
+                    'Network Name': r.network_name,
+                    'Route Name': r.name,
+                    'MAC': mac,
+                    'IP': info.get('ip', ''),
+                    'Description': info.get('name', ''),
+                })
+        df_reservations = pd.DataFrame(reservation_rows)
 
-        fixed_ip_assignments = self._get_fixed_ip_assignments()
+        # Sheet 3: Reserved Ranges (as literal column)
+        reserved_rows = []
+        for r in self.routes:
+            if r.reserved_ip_ranges:  # Only include if ranges exist
+                reserved_rows.append({
+                    'Network Name': r.network_name,
+                    'Route Name': r.name,
+                    'Reserved Ranges': json.dumps(r.reserved_ip_ranges, indent=2)
+                })
+        df_reserved = pd.DataFrame(reserved_rows)
 
-        self.wb = load_workbook(self.WORKBOOK_NAME)
-        self.wb.create_sheet(sheet_name)
-        sheet = self.wb[sheet_name]
+        # Write to Excel (with headers and formatting)
+        with pd.ExcelWriter(filepath, engine='xlsxwriter') as writer:
+            df_all_routes.to_excel(writer, sheet_name='All Routes', index=False)
+            df_reservations.to_excel(writer, sheet_name='Fixed IPs', index=False)
+            df_reserved.to_excel(writer, sheet_name='Reserved Ranges', index=False)
 
-        index = 0
-        sheet[xlref(0, 0)] = 'Network Name'
-        sheet[xlref(0, 1)] = 'Subnet Name'
-        sheet[xlref(0, 2)] = 'IP address'
-        sheet[xlref(0, 3)] = 'MAC address'
-        sheet[xlref(0, 4)] = 'Description'
-        sheet[xlref(0, 5)] = 'Enabled'
-
-        for network_name in fixed_ip_assignments:
-            for subnet_name in fixed_ip_assignments[network_name]:
-                for ip in fixed_ip_assignments[network_name][subnet_name]:
-
-                    mac = fixed_ip_assignments[network_name][subnet_name][ip]['mac']
-                    name = fixed_ip_assignments[network_name][subnet_name][ip]['name']
-                    enabled = fixed_ip_assignments[network_name][subnet_name][ip]['enabled']
-
-                    sheet[xlref(index + 1, 0)] = network_name
-                    sheet[xlref(index + 1, 1)] = subnet_name
-                    sheet[xlref(index + 1, 2)] = ip
-                    sheet[xlref(index + 1, 3)] = mac
-                    sheet[xlref(index + 1, 4)] = name
-                    sheet[xlref(index + 1, 5)] = enabled
-                    index += 1
-        custom_layout_sheet(sheet)
-        self._excel_save()
-
-    def _get_reserved_ip_ranges(self) -> defaultdict[str, defaultdict[str, defaultdict[str, list[Union[dict, str]]]]]:
-
-        result = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-        network_names = self._get_network_names
-        for network_name in network_names:
-            subnets = self._get_network_appliance_static_routes_cache.get(network_name)
-            if not subnets:
-                continue
-            for subnet in subnets:
-                # print(subnet)
-                enabled = subnet.get('enabled')
-                subnet_name = subnet.get('name')
-                reserved_ip_ranges = subnet.get('reservedIpRanges')
-                if not reserved_ip_ranges:
-                    continue
-                for reserved_ip_range in reserved_ip_ranges:
-                    result[network_name][subnet_name]['res'].append(reserved_ip_range)
-                result[network_name][subnet_name]['enabled'].append(enabled)
-        # print(result)
-        return result
-
-    def print_reserved_ip_ranges_to_excel_tab(self) -> None:
-
-        if self.get_meraki_data is False:
-            return
-
-        sheet_name = 'Reserved ranges'
-
-        reserved_ip_ranges = self._get_reserved_ip_ranges()
-
-        self.wb = load_workbook(self.WORKBOOK_NAME)
-        self.wb.create_sheet(sheet_name)
-        sheet = self.wb[sheet_name]
-
-        index = 0
-        sheet[xlref(0, 0)] = 'Network Name'
-        sheet[xlref(0, 1)] = 'Subnet Name'
-        sheet[xlref(0, 2)] = 'Start1'
-        sheet[xlref(0, 3)] = 'End1'
-        sheet[xlref(0, 4)] = 'Start2'
-        sheet[xlref(0, 5)] = 'End2'
-        sheet[xlref(0, 6)] = 'Enabled'
-
-        for network_name in reserved_ip_ranges:
-            for subnet_name in reserved_ip_ranges[network_name]:
-                sheet[xlref(index + 1, 0)] = network_name
-                sheet[xlref(index + 1, 1)] = subnet_name
-                if len(reserved_ip_ranges[network_name][subnet_name]['res']) == 1:
-                    sheet[xlref(index + 1, 2)] = reserved_ip_ranges[network_name][subnet_name]['res'][0]['start']
-                    sheet[xlref(index + 1, 3)] = reserved_ip_ranges[network_name][subnet_name]['res'][0]['end']
-                else:
-                    for i, reserved_ip_range in enumerate(reserved_ip_ranges[network_name][subnet_name]['res']):
-                        if i == 0:
-                            sheet[xlref(index + 1, 2)] = reserved_ip_range['start']
-                            sheet[xlref(index + 1, 3)] = reserved_ip_range['end']
-                        else:
-                            sheet[xlref(index + 1, 4)] = reserved_ip_range['start']
-                            sheet[xlref(index + 1, 5)] = reserved_ip_range['end']
-                sheet[xlref(index + 1, 6)] = reserved_ip_ranges[network_name][subnet_name]['enabled'][0]
-                index += 1
-        custom_layout_sheet(sheet)
-        self._excel_save()
-
-    def _get_static_routes(self) -> defaultdict[str, defaultdict[str, dict[str, Union[str, bool]]]]:
-
-        result = defaultdict(lambda: defaultdict(dict))
-        network_names = self._get_network_names
-        for network_name in network_names:
-            static_routes = self._get_network_appliance_static_routes_cache.get(network_name)
-            if static_routes:
-                for route in static_routes:
-                    result[network_name][route['name']]['subnet'] = route['subnet']
-                    result[network_name][route['name']]['enabled'] = route['enabled']
-        return result
-
-    def print_static_routes_to_excel_tab(self) -> None:
-
-        if self.get_meraki_data is False:
-            return
-
-        sheet_name = 'Static routes'
-
-        static_routes = self._get_static_routes()
-
-        self.wb = load_workbook(self.WORKBOOK_NAME)
-        self.wb.create_sheet(sheet_name)
-        sheet = self.wb[sheet_name]
-
-        index = 0
-        sheet[xlref(0, 0)] = 'Network Name'
-        sheet[xlref(0, 1)] = 'Subnet Name'
-        sheet[xlref(0, 2)] = 'Subnet'
-        sheet[xlref(0, 3)] = 'Enabled'
-
-        for network_name in static_routes:
-            for subnet_name in static_routes[network_name]:
-                sheet[xlref(index + 1, 0)] = network_name
-                sheet[xlref(index + 1, 1)] = subnet_name
-                sheet[xlref(index + 1, 2)] = static_routes[network_name][subnet_name]['subnet']
-                sheet[xlref(index + 1, 3)] = static_routes[network_name][subnet_name]['enabled']
-                index += 1
-        custom_layout_sheet(sheet)
-        self._excel_save()
-
-    @cached_property
-    def _get_network_names(self) -> list[str]:
-        network_names = []
-        orgs = self.dashboard.organizations.getOrganizations()
-        for org in orgs:
-            networks = self.dashboard.organizations.getOrganizationNetworks(org['id'])
-            for network in networks:
-                network_names.append(network['name'])
-        return network_names
-
-    def _excel_save(self) -> None:
-        self.wb.save(self.WORKBOOK_NAME)
+        print("✅ Export completed.")
