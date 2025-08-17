@@ -1,5 +1,19 @@
-# Meraki
-This project expose methods to get network information out of the Meraki SD-WAN solution using REST API
-and prints the data in an Excel file.
+# ConfigBuilder
+This project builds FTG network configurations based on Excel or CSV template files and/or data fetched via
+a Meraki API.
 
-The data is used to generate configurations for Fortigate appliances
+The project supports building the following configuration parts:
+- DHCP server configuration
+- . . .
+
+TO DO:
+- API Cache using pickle (high)
+- Doc strings plus annotations everywhere (high)
+- Linter (medium)
+- Gui (high)
+- Tests (some unit, plus integration) (medium)
+- Type validation during runtime (low)
+- Logging (medium)
+- Environment variables (high)
+- Export project to PIP (high)
+- . . .

@@ -1,5 +1,3 @@
-import json
-
 import pandas as pd
 from pathlib import Path
 
@@ -30,14 +28,3 @@ def read_excel_to_df(
         df = df[list(fields.values())]              # then select only wanted cols
 
     return df
-
-class Tree(dict):
-    """ Autovivificious dictionary """
-
-    def __missing__(self, key):
-        value = self[key] = type(self)()
-        return value
-
-    def __str__(self):
-        """ Serialize dictionary to JSON formatted string with indents """
-        return json.dumps(self, indent=4)
