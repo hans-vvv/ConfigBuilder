@@ -1,22 +1,17 @@
-from meraki_info import MerakiApiManager, MerakiExcelExporter
-from config_generator import ConfigGenerator
-from credentials import API_KEY
+from app.views import build_dhcp_subtree
+from app.config_printer import write_configs
 
 
 def main():
 
-    manager = MerakiApiManager()
-    manager.initialize(api_key=API_KEY)
+    import os
+    template_dir = r"app/config_printer/templates"
 
-    routes = manager.get_structured_static_routes()
+    print("Looking in:", os.path.abspath(template_dir))
+    print("Files found:", os.listdir(template_dir))
 
-    # exporter = MerakiExcelExporter(routes)
-    # exporter.export_to_excel("meraki_static_routes.xlsx")
-
-    config_generator = ConfigGenerator(use_cache=True)
-    config_generator.set_api_data("static_routes", routes)
-    config_generator.initialize("meraki_dhcp_info.xlsx")
-    config_generator.write_configs()
+    dhcp_subtree = build_dhcp_subtree()
+    write_configs(dhcp_subtree, output_dir="output_configs")
 
 
 if __name__ == "__main__":
