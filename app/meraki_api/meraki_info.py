@@ -1,21 +1,22 @@
 # TODO(medium): Validate Excel columns at load time; raise clear error if a required column is missing.
 # Add a small schema map per sheet (name -> required columns).
-import json
-
 import meraki
 
 import pandas as pd
-from pathlib import Path
 
 from app.models import StaticRoute
 from app.config.secrets import MERAKI_API_KEY
+from .cache import MerakiCache
 
 
 class MerakiApiManager:
 
-    def __init__(self, auto_initialize=True):
+    def __init__(self, auto_initialize: bool = True, use_cache: bool = True, cache_dir: str = ".cache/meraki"):
+        
         self.dashboard = None
-        self._static_routes = None  # cache for static routes
+        self._static_routes: pd.DataFrame | None = None
+        self.use_cache = use_cache
+        self.cache = MerakiCache(cache_dir)
 
         if auto_initialize:
             self.initialize(api_key=MERAKI_API_KEY)
@@ -29,8 +30,15 @@ class MerakiApiManager:
         if not self.dashboard:
             raise RuntimeError("Meraki dashboard client not initialized. Call initialize() first.")
 
-        if self._static_routes is not None:
+        if self._static_routes is not None and self.use_cache is False:
             return self._static_routes
+
+        if self.use_cache:
+            cached = self.cache.load("static_routes")
+            if cached is not None:                
+                return cached
+            else:
+                raise RuntimeError("No cached data available, first run from source and don't use cache")
 
         static_routes = []
 
@@ -65,56 +73,59 @@ class MerakiApiManager:
             print(f"Error fetching organizations or networks: {e}")
 
         self._static_routes = pd.DataFrame([r.__dict__ for r in static_routes])  # cache
-        return pd.DataFrame([r.__dict__ for r in static_routes])
+        if not self.use_cache:
+            self.cache.save("static_routes", self._static_routes)
+        return self._static_routes
+
+def get_meraki_api(use_cache: bool = True):
+    return MerakiApiManager(use_cache=use_cache)
 
 
-def export_static_routes_to_excel(filepath: str | Path, routes: list[StaticRoute]):
+# def export_static_routes_to_excel(filepath: str | Path, routes: list[StaticRoute]):
+#     # TODO(high): Fix routes is list of DFs
 
-    filepath = Path(filepath)
-    print(f"Exporting to {filepath.resolve()}...")
+#     filepath = Path(filepath)
+#     print(f"Exporting to {filepath.resolve()}...")
 
-    # Sheet 1: All Routes (with properly expanded values)
-    df_all_routes = pd.DataFrame([
-        {
-            'Network Name': r.network_name,
-            'Route Name': r.name,
-            'Subnet': r.subnet,
-            'Enabled': r.enabled,
-        }
-        for r in routes
-    ])
+#     # Sheet 1: All Routes (with properly expanded values)
+#     df_all_routes = pd.DataFrame([
+#         {
+#             'Network Name': r.network_name,
+#             'Route Name': r.name,
+#             'Subnet': r.subnet,
+#             'Enabled': r.enabled,
+#         }
+#         for r in routes
+#     ])
 
-    # Sheet 2: Fixed IPs
-    reservation_rows = []
-    for r in routes:
-        for mac, info in r.fixed_ip_assignments.items():
-            reservation_rows.append({
-                'Network Name': r.network_name,
-                'Route Name': r.name,
-                'MAC': mac,
-                'IP': info.get('ip', ''),
-                'Description': info.get('name', ''),
-            })
-    df_reservations = pd.DataFrame(reservation_rows)
+#     # Sheet 2: Fixed IPs
+#     reservation_rows = []
+#     for r in routes:
+#         for mac, info in r.fixed_ip_assignments.items():
+#             reservation_rows.append({
+#                 'Network Name': r.network_name,
+#                 'Route Name': r.name,
+#                 'MAC': mac,
+#                 'IP': info.get('ip', ''),
+#                 'Description': info.get('name', ''),
+#             })
+#     df_reservations = pd.DataFrame(reservation_rows)
 
-    # Sheet 3: Reserved Ranges (as literal column)
-    reserved_rows = []
-    for r in routes:
-        if r.reserved_ip_ranges:  # Only include if ranges exist
-            reserved_rows.append({
-                'Network Name': r.network_name,
-                'Route Name': r.name,
-                'Reserved Ranges': json.dumps(r.reserved_ip_ranges, indent=2)
-            })
-    df_reserved = pd.DataFrame(reserved_rows)
+#     # Sheet 3: Reserved Ranges (as literal column)
+#     reserved_rows = []
+#     for r in routes:
+#         if r.reserved_ip_ranges:  # Only include if ranges exist
+#             reserved_rows.append({
+#                 'Network Name': r.network_name,
+#                 'Route Name': r.name,
+#                 'Reserved Ranges': json.dumps(r.reserved_ip_ranges, indent=2)
+#             })
+#     df_reserved = pd.DataFrame(reserved_rows)
 
-    # Write to Excel (with headers and formatting)
-    with pd.ExcelWriter(filepath, engine='xlsxwriter') as writer:
-        df_all_routes.to_excel(writer, sheet_name='All Routes', index=False)
-        df_reservations.to_excel(writer, sheet_name='Fixed IPs', index=False)
-        df_reserved.to_excel(writer, sheet_name='Reserved Ranges', index=False)
+#     # Write to Excel (with headers and formatting)
+#     with pd.ExcelWriter(filepath, engine='xlsxwriter') as writer:
+#         df_all_routes.to_excel(writer, sheet_name='All Routes', index=False)
+#         df_reservations.to_excel(writer, sheet_name='Fixed IPs', index=False)
+#         df_reserved.to_excel(writer, sheet_name='Reserved Ranges', index=False)
 
-    print("✅ Export completed.")
-
-
-meraki_api = MerakiApiManager()
+#     print("✅ Export completed.")

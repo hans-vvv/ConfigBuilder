@@ -7,7 +7,6 @@ The project supports building the following configuration parts:
 - . . .
 
 TO DO:
-- Github ignore (high)
 - Exception handling (high)
 - Refactor printer to support printing of multiple view results (high)
 - Meraki API Cache using pickle (high)
