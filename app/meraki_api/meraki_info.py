@@ -6,7 +6,7 @@ import pandas as pd
 from pathlib import Path
 
 from app.models import StaticRoute
-from app.credentials import API_KEY
+from app.config.secrets import MERAKI_API_KEY
 
 
 class MerakiApiManager:
@@ -16,7 +16,7 @@ class MerakiApiManager:
         self._static_routes = None  # cache for static routes
 
         if auto_initialize:
-            self.initialize(api_key=API_KEY)
+            self.initialize(api_key=MERAKI_API_KEY)
 
     def initialize(self, api_key, print_console=False, suppress_logging=True):
         self.dashboard = meraki.DashboardAPI(

@@ -7,13 +7,16 @@ The project supports building the following configuration parts:
 - . . .
 
 TO DO:
-- API Cache using pickle (high)
+- Github ignore (high)
+- Exception handling (high)
+- Refactor printer to support printing of multiple view results (high)
+- Meraki API Cache using pickle (high)
 - Doc strings plus annotations everywhere (high)
-- Linter (medium)
-- Gui (high)
-- Tests (some unit, plus integration) (medium)
-- Type validation during runtime (low)
+- Gui (medium)
+- Tests (some, not all, maybe none unit, plus integration) (medium)
 - Logging (medium)
-- Environment variables (high)
-- Export project to PIP (high)
+- Environment variables (medium)
+- Export project to PIP (medium)
+- Type validation during runtime (low)
+- Linter (low)
 - . . .
