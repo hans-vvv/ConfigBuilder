@@ -1,3 +1,4 @@
+# TODO(medium): Add docstrings + type annotations to all helpers; promote shared DF utilities (safe_merge, coalesce).
 import pandas as pd
 from pathlib import Path
 

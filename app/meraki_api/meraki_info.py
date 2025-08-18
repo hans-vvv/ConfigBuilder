@@ -1,3 +1,5 @@
+# TODO(medium): Validate Excel columns at load time; raise clear error if a required column is missing.
+# Add a small schema map per sheet (name -> required columns).
 import json
 
 import meraki

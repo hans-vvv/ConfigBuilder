@@ -1,3 +1,6 @@
+# TODO(medium): Validate Excel columns at load time; raise clear error if a required column is missing.
+# Add a small schema map per sheet (name -> required columns).
+
 import pandas as pd
 from pathlib import Path
 

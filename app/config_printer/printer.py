@@ -1,3 +1,7 @@
+# TODO(high): Refactor printer to accept multiple view outputs (e.g., dhcp_tree, bgp_tree, interfaces_tree)
+# and render a single combined config per network. Consider a registry like:
+#   def render_all(network_name: str, trees: dict[str, dict]) -> str
+# Then iterate templates in a deterministic order.
 import json
 import os
 from typing import Dict, Any

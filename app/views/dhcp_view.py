@@ -1,3 +1,15 @@
+# TODO(medium): Validate Excel columns at load time; raise clear error if a required column is missing.
+# Add a small schema map per sheet (name -> required columns).
+
+# TODO(medium): Add structured logging at key join/transform steps (row counts before/after merges).
+# Use Python logging with module-level logger.
+
+# TODO(medium): Add basic runtime type validation on the final dhcp_tree (e.g., pydantic/dataclasses-json or voluptuous)
+# so we catch malformed entries before rendering.
+
+# TODO(medium): Unit-test dhcp_view.build_dhcp_subtree()
+# - Provide small fixture DFs for dhcp_info, options, nameservers, static_routes
+# - Assert produced dict has netmask/start_ip/end_ip and option list expansion
 import json
 from collections import defaultdict
 

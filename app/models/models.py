@@ -1,3 +1,6 @@
+# TODO(medium): Add dataclasses (or pydantic models) for subtree payloads (e.g., DhcpSubnetConfig)
+# to get editor-time and runtime validation.
+
 from typing import Optional
 from dataclasses import dataclass, field
 
