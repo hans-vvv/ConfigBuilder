@@ -43,6 +43,9 @@ venv.bak/
 *.manifest
 *.spec
 
+# Pycharm ISE
+.idea
+
 # Installer logs
 debug.log
 pip-log.txt
@@ -118,6 +121,9 @@ celerybeat.pid
 .spyderproject
 .spyproject
 
+# Continue VScode plugin
+.continue
+
 # Rope project settings
 .ropeproject
 
@@ -162,6 +168,7 @@ Thumbs.db
 
 # Custom entries
 output_configs/
-result.xlsx
-meraki_static_routes.xlsx
-src/dhcp_server_info.xlsx
+*.xlsx
+test_config/*
+test_configs/
+src/

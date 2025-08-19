@@ -29,3 +29,21 @@ def read_excel_to_df(
         df = df[list(fields.values())]              # then select only wanted cols
 
     return df
+
+def coalesce(*args):
+    """
+    Return the first argument that is not None, NaN, or an empty string.
+    
+    This helper is designed for use with pandas objects to simplify selection of the first valid value
+    among multiple columns, typically after DataFrame merges where overlapping columns may contain NaNs.
+    
+    Args:
+        *args: A variable number of values to check.
+
+    Returns:
+        The first value that is not None, not pandas.NaN, and not an empty string; otherwise None.
+    """
+    for arg in args:
+        if arg is not None and pd.notna(arg) and arg != '':
+            return arg
+    return None

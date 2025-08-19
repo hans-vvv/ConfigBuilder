@@ -14,11 +14,11 @@ config system dhcp server
         end
         config options
 {% for item in subnet_items.dhcp_options %}
-           edit {{loop.index}}
-               set code {{ item.code }}
-               set type {{ item.type }}
-               set value {{ item.value }}
-           next
+            edit {{loop.index}}
+                set code {{ item.code }}
+                set type {{ item.type }}
+                set value {{ item.value }}
+            next
 {% if loop.last %}
         end
 {% endif %}

@@ -8,13 +8,11 @@
 # so we catch malformed entries before rendering.
 
 # TODO(medium): Unit-test dhcp_view.build_dhcp_subtree()
-# - Provide small fixture DFs for dhcp_info, options, nameservers, static_routes
 # - Assert produced dict has netmask/start_ip/end_ip and option list expansion
 # import json
-from collections import defaultdict
-
 import ipaddress
 import pandas as pd
+from app.utils import coalesce
 
 from app.template_data import (
     get_dhcp_info_df,
@@ -124,15 +122,19 @@ class DhcpView(BaseView):
         # 4) Build config-tree dict
         dhcp_tree = {}
         for row in merged.itertuples(index=False):
+            
+            details = _subnet_details(getattr(row, "subnet", None))  # type: ignore
+            
+            network_name = coalesce(getattr(row, "network_name_x", None), getattr(row, "network_name_y", None))
+            subnet_name = coalesce(getattr(row, "subnet_name", None), getattr(row, "name", None))
 
-            details = _subnet_details(getattr(row, "subnet", None)) #type: ignore
+            if network_name not in dhcp_tree:
+                dhcp_tree[network_name] = {}
 
-            if row.network_name_x not in dhcp_tree:
-                dhcp_tree[row.network_name_x] = {}
-            dhcp_tree[row.network_name_x][row.subnet_name] = {
+            dhcp_tree[network_name][subnet_name] = {
                 "gwip": row.gwip,
                 "lease": row.lease_time,
-                "subnet": getattr(row, "subnet", None),
+                "subnet": coalesce(getattr(row, "subnet", None)),  # normalized too!
                 "netmask": details["netmask"],
                 "start_ip": details["start_ip"],
                 "end_ip": details["end_ip"],
@@ -140,10 +142,8 @@ class DhcpView(BaseView):
                 "dhcp_options": _expand_dhcp_options(row),
                 "static_bindings": _extract_bindings(row),
                 "reserved_ranges": _extract_reserved_ranges(row),
-                # optional extras if you want them downstream
-                "network_name": row.network_name_x,
-                # "network_name": getattr(row, "network_name", None),
+                "network_name": network_name,
                 "route_name": getattr(row, "name", None),
             }
-        # print(json.dumps(dhcp_tree, indent=4))
+
         return dhcp_tree
