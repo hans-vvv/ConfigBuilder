@@ -1,10 +1,11 @@
 # TODO(medium): Validate Excel columns at load time; raise clear error if a required column is missing.
 # Add a small schema map per sheet (name -> required columns).
 
+from typing import List
 import pandas as pd
 from pathlib import Path
 
-from app.utils import read_excel_to_df
+from app.core.utils import read_excel_to_df
 
 BASE_DIR = Path(__file__).resolve().parents[2]  # root of the project
 SRC_DIR = BASE_DIR / "src"
@@ -26,7 +27,6 @@ def get_dhcp_info_df() -> pd.DataFrame:
         'Name server template': 'ns_templ',
         'DHCP options template': 'dhcp_templ',
     }
-
     return read_excel_to_df(wb_path, "DHCP info", fields)
 
 
@@ -55,3 +55,4 @@ def get_name_server_templates_df() -> pd.DataFrame:
         'Name servers': 'name_servers',
     }
     return read_excel_to_df(wb_path, "Name server templates", fields)
+    

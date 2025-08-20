@@ -1,6 +1,6 @@
-from app.meraki_api import MerakiApiManager
+from app.printers import write_configs
 
-class BaseView: # prepare for generic common dependencies
-    def __init__(self, *args, **kwargs):
-        pass
+class BaseView: # inject common dependencies
+    def __init__(self, write_configs, *args, **kwargs):
+        self.write_configs = write_configs
 

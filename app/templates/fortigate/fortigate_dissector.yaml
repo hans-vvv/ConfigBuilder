@@ -1,0 +1,35 @@
+- match: config system dhcp server
+  name: dhcp_server 
+  child:
+  - match: edit (\d+)    
+    parent: scope
+    child:
+    - match: set default-gateway (?P<def_gw>.*)
+    - match: set netmask (?P<mask>.*)
+    - match: set interface (?P<interface>.*)
+    - match: set dns-server\d (.*)
+      parent: dns_servers          
+    - match: config ip-range 
+      name: ip-ranges     
+      child:
+      - match: edit (\d+)          
+        child:
+        - match: set start-ip (?P<start_ip>.*)
+        - match: set end-ip (?P<end_ip>.*) 
+    - match: config options
+      name: options   
+      child: 
+      - match: edit (\d+) 
+        child:
+        - match: set code (?P<code>.*)
+        - match: set type (?P<type>.*)
+        - match: set value (?P<value>.*)
+    - match: config reserved-address
+      name: reserved_addresses
+      child: 
+      - match: edit (\d+) 
+        child:
+        - match: set ip (?P<ip>.*)
+        - match: set mac (?P<type>.*)
+        - match: set description (?P<description>.*)
+  

@@ -15,12 +15,13 @@ def parse_fortigate_config(config_text: str) -> dict:
 
     # Locate dissector YAML relative to this file
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    dissector_path = os.path.join(base_dir, 'fortigate_dissector.yaml')
+    # base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    dissector_path = os.path.join(base_dir, 'templates', 'fortigate', 'fortigate_dissector.yaml')
 
     # Load the dissector from YAML file
     dissector = Dissector.from_file(dissector_path)
 
-    # Parse the config text using end-of-block marker 'end'
+    # Parse the config text 4 space indentation
     tree = dissector.parse_str(config_text, indent=4)
 
     return dict(tree)  # convert Tree (dict subclass) to plain dict
