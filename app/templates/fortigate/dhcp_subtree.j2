@@ -24,7 +24,7 @@ config system dhcp server
 {% endif %}
 {% endfor %}
         config exclude-range
-{% for item in subnet_items.reserved_ranges %}
+{% for item in subnet_items.reserved_ip_ranges %}
             edit {{loop.index}}
                 set start-ip {{item.start}}
                 set end-ip {{item.end}}

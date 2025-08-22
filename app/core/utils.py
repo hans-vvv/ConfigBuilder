@@ -1,6 +1,9 @@
 # TODO(medium): Add docstrings + type annotations to all helpers; promote shared DF utilities (safe_merge, coalesce).
+import os
 import pandas as pd
 from pathlib import Path
+from typing import Type
+from dataclasses import fields, is_dataclass
 
 
 def read_excel_to_df(
@@ -30,20 +33,83 @@ def read_excel_to_df(
 
     return df
 
-def coalesce(*args):
-    """
-    Return the first argument that is not None, NaN, or an empty string.
+
+def generate_excel_template(filepath: str, dataclass_types: list[Type]) -> None:
+    # Ensure parent directory exists
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
     
-    This helper is designed for use with pandas objects to simplify selection of the first valid value
-    among multiple columns, typically after DataFrame merges where overlapping columns may contain NaNs.
+    with pd.ExcelWriter(filepath, engine='xlsxwriter') as writer:
+        for dc in dataclass_types:
+            if not is_dataclass(dc):
+                raise ValueError(f"{dc} is not a dataclass type")           
+            
+            col_names = [f.name for f in fields(dc)]
+            df = pd.DataFrame(columns=col_names)
+            df.to_excel(writer, sheet_name=dc.__name__, index=False)
+    
+    print(f"Excel template created at {filepath}")
+
+
+def load_all_excel_sheets(filepath: str) -> dict[str, pd.DataFrame]:
+    """
+    Load all sheets from an Excel file into a dictionary of DataFrames.
     
     Args:
-        *args: A variable number of values to check.
+        filepath: Path to the Excel file.
+    
+    Returns:
+        Dictionary where keys are sheet names and values are pandas DataFrames.
+    """
+    file_path = Path(filepath)
+    excel_data = pd.read_excel(file_path, sheet_name=None)  # Load all sheets
+    return excel_data  # Dict[str, DataFrame]
+
+
+def find_project_root(start_path: Path | None = None) -> Path:
+    """
+    Traverse upwards from start_path (or current file location if None) until a directory
+    containing '.git' is found. That directory is considered the project root.
+
+    Args:
+        start_path: The starting path to begin searching from.
 
     Returns:
-        The first value that is not None, not pandas.NaN, and not an empty string; otherwise None.
+        Path object pointing to the project root directory.
+
+    Raises:
+        RuntimeError: If no '.git' directory is found in any parent folders.
     """
-    for arg in args:
-        if arg is not None and pd.notna(arg) and arg != '':
-            return arg
-    return None
+    if start_path is None:
+        start_path = Path(__file__).resolve()
+
+    for parent in [start_path] + list(start_path.parents):
+        if (parent / '.git').is_dir():
+            return parent
+
+    raise RuntimeError("Project root not found. Make sure to run inside a Git repository.")
+
+
+def pprint_df(df: pd.DataFrame) -> None:
+        """
+        Pprint a pandas DataFrame 
+        """         
+        with pd.option_context(
+            'display.max_columns', None,
+            'display.max_rows', 20,
+            'display.width', 1000,
+            'display.colheader_justify', 'left'
+        ):
+            print(df)
+
+
+def merge_nested_dicts(d1: dict, d2: dict) -> dict:
+    """
+    Recursively merge nested dictionaries d2 into d1.
+    If keys overlap at inner dict level, update inner dict values.
+    """
+    for key, value in d2.items():
+        if key in d1 and isinstance(d1[key], dict) and isinstance(value, dict):
+            d1[key] = merge_nested_dicts(d1[key], value)
+        else:
+            d1[key] = value
+    return d1
