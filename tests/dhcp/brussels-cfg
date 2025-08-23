@@ -1,0 +1,67 @@
+config system dhcp server
+
+    edit 20
+        set default-gateway
+        set netmask
+        set interface "Interco_vlan920"
+        config ip-range
+            edit 1
+                set start-ip 1.1.1.6
+                set end-ip 1.1.1.254
+            next
+        end
+        config options
+            edit 1
+                set code c1
+                set type t1
+                set value v1
+            next
+            edit 2
+                set code c2
+                set type t2
+                set value v2
+            next
+        end
+        config exclude-range
+            edit 1
+                set start-ip 1.1.1.1
+                set end-ip 1.1.1.10
+            next
+        end
+        set dns-server1 1.1.1.1
+        set dns-server2 1.0.1.0
+        next
+
+    edit 11
+        set default-gateway
+        set netmask
+        set interface "Interco_vlan920"
+        config ip-range
+            edit 1
+                set start-ip 2.2.2.1
+                set end-ip 2.2.2.254
+            next
+        end
+        config options
+            edit 1
+                set code c3
+                set type t3
+                set value v3
+            next
+            edit 2
+                set code c4
+                set type t4
+                set value v4
+            next
+        end
+        config exclude-range
+            edit 1
+                set start-ip 2.2.2.1
+                set end-ip 2.2.2.10
+            next
+        end
+        set dns-server1 8.8.4.4
+        set dns-server2 8.8.8.8
+        next
+
+end

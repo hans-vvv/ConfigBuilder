@@ -9,16 +9,18 @@ class BaseExcelDataLoader:
     Base class to load Excel sheets into DataFrames and provide access.
     """
 
-    def __init__(self, excel_filepath: str | Path):
+    def __init__(self, excel_filepath: str | Path, auto_load: bool = True):
         filepath = Path(excel_filepath)
         if not filepath.is_absolute():
             project_root = find_project_root()
             filepath = project_root / filepath
         self.excel_filepath = filepath.resolve()
         self._dfs: Optional[Dict[str, pd.DataFrame]] = None
+        if auto_load:
+            self.load()
 
     def load(self) -> None:
-        """Load all sheets into DataFrames. Call before queries."""
+        """Load all sheets into DataFrames."""
         self._dfs = load_all_excel_sheets(str(self.excel_filepath))
 
     def get_dataframe_from_sheet(self, sheetname: str) -> pd.DataFrame:

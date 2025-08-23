@@ -1,11 +1,46 @@
-from app.services.meraki import get_meraki_api
-from app.views import dhcp_view
-from app.printers import write_configs
+from app.views import test_dhcp_view
+# from app.models import meraki_models
+# from app.models import StaticRoute
+# from app.core.utils import generate_excel_template
+# from app.models.dhcp_info_model import (
+#     DhcpInfo,    
+#     DhcpOptionTemplate,
+#     DhcpOption,
+#     NameServerTemplate,
+#     NameServer
+# )
 
 
 def main():  
 
-    dhcp_view.run()
+    test_dhcp_view.run()
+
+    # dataclasses = [
+    #     DhcpInfo,    
+    #     DhcpOptionTemplate,
+    #     DhcpOption,
+    #     NameServerTemplate,
+    #     NameServer
+    # ]
+    # generate_excel_template('app/templates/excel_csv_templates/dhcp_info.xlsx', dataclasses)
+
+    # dataclasses = [StaticRoute]
+    # generate_excel_template('app/templates/excel_csv_templates/static_route.xlsx', dataclasses)
+
+    # from app.models import DhcpInfoQueries
+
+    # dhcp_info_queries = DhcpInfoQueries('src/dhcp_info_test.xlsx')
+    # dhcp_info_queries.load()
+
+    # dhcp_info_queries.pprint_df('DhcpInfo')
+    # dhcp_info_queries.get_name_servers_for_subnet("BRUSSELS", "sub-1")
+    # dhcp_info_queries.pprint_df(class_name='DhcpOption')
+    # dhcp_info_queries.get_dhcp_options_for_subnet("BRUSSELS", "sub-1")
+    # dhcp_info_queries.pprint_df(class_name='DhcpInfo')
+    # dhcp_info_queries.pprint_df(class_name='DhcpOptionTemplate')
+    # dhcp_info_queries.pprint_df(class_name='DhcpOption')
+    # dhcp_info_queries.pprint_df(class_name='NameServerTemplate')
+    # dhcp_info_queries.pprint_df(class_name='NameServer')
 
     # Path to sample config file
     # import os

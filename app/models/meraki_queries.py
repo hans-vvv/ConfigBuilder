@@ -6,14 +6,14 @@ from app.models import StaticRoute
 
 class MerakiQueries:
 
-    def __init__(self) -> None:
+    def __init__(self, auto_load: bool = True) -> None:
         """Initialize instance, setting up the Meraki API client and cache."""
         self.meraki_api = get_meraki_api
         self.dashboard = None  
         self.use_cache: bool | None = None
         self.cached_data: dict[str, Any] = {}
-
-        self._load_env()        
+        if auto_load:
+            self._load_env()        
   
     def _load_env(self) -> None:
         """Initialize the Meraki dashboard API client."""
@@ -179,7 +179,7 @@ class MerakiQueries:
                     "reserved_ip_ranges": [
                         {"start": "2.2.2.1", "end": "2.2.2.10"}
                     ],
-                    "start_ip": "2.2.2.2",
+                    "start_ip": "2.2.2.1",
                     "end_ip": "2.2.2.254",
                     "comment": ""
                 }

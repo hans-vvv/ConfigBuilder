@@ -1,5 +1,4 @@
 import pandas as pd
-from typing import Iterator
 from app.core.utils import pprint_df
 from .base_excel_data_loader import BaseExcelDataLoader
 
