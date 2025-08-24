@@ -2,6 +2,20 @@
 # Use: https://github.com/github/gitignore/blob/main/Python.gitignore as a base.
 
 
+# Custom entries
+output_configs/
+*.xlsx
+test_configs/
+
+# Ignore everything under app/src/production
+app/src/production/
+
+# But track everything else
+!app/src/test/
+!app/src/barebone/
+
+
+
 # Python bytecode and caches
 __pycache__/
 *.py[cod]
@@ -165,10 +179,3 @@ secrets.json
 # OS generated files
 .DS_Store
 Thumbs.db
-
-# Custom entries
-output_configs/
-*.xlsx
-test_config/*
-test_configs/
-src/
