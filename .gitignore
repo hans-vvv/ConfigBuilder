@@ -5,6 +5,7 @@
 # Custom entries
 output_configs/
 test_configs/
+old/
 
 # Ignore everything under app/src/production
 app/src/production/
