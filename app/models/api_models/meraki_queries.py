@@ -1,6 +1,8 @@
 import ipaddress
-import pandas as pd
 from typing import Any
+
+import pandas as pd
+
 from app.api import get_meraki_api
 
 
@@ -71,10 +73,10 @@ class MerakiQueries:
         if not self.dashboard:
             raise RuntimeError("Meraki dashboard client not initialized. Call _load_env first.")
 
-        if self.use_cache and self.cached_data.get("static_routes") is not None:
+        if use_cache and self.cached_data.get("static_routes") is not None:
             return self.cached_data["static_routes"]
 
-        if self.use_cache:
+        if use_cache:
             self.cached_data["static_routes"] = self.meraki_api.cache_controls.load("static_routes")
             if self.cached_data["static_routes"] is not None:                
                 return self.cached_data["static_routes"]
@@ -113,11 +115,11 @@ class MerakiQueries:
             print(f"Error fetching organizations or networks: {e}")
 
         static_routes = pd.DataFrame([r for r in static_routes])
-        if not self.use_cache:
+        if not use_cache:
             self.meraki_api.cache_controls.save("static_routes", static_routes)
         return static_routes
     
-    def get_static_routes(self, use_cache: bool = True) -> dict[str, dict[str, Any | None]]: # type: ignore
+    def get_static_routes(self, use_cache: bool = True) -> dict[str, dict[str, Any | None]]:  # type: ignore
         """Get static routes, optionally using cached data.
 
         Args:
@@ -139,13 +141,13 @@ class MerakiQueries:
             result[network_name][subnet_name] = {
                 "enabled": getattr(row, "enabled", True),
                 "subnet_details": self._subnet_details(getattr(row, "subnet", None)),  # type: ignore
-                "static_bindings": self._static_bindings(getattr(row, "fixed_ip_assignmentst", None)), # type: ignore
-                "reserved_ranges": self._extract_reserved_ranges(getattr(row, "reserved_ip_ranges", None)) # type: ignore
+                "static_bindings": self._static_bindings(getattr(row, "fixed_ip_assignments", None)),  # type: ignore
+                "reserved_ranges": self._extract_reserved_ranges(getattr(row, "reserved_ip_ranges", None))  # type: ignore
             }
         return result
     
     @staticmethod
-    def get_mock_meraki_data() -> dict[str, dict[str, Any]]: # type: ignore
+    def get_mock_meraki_data() -> dict[str, dict[str, Any]]:  # type: ignore
         """
         Returns mocked Meraki API data as a nested dictionary:
             - first key: network_name

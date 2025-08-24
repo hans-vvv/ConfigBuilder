@@ -23,11 +23,10 @@ class BaseExcelDataLoader:
         """Load all sheets into DataFrames."""
         self._dfs = load_all_excel_sheets(str(self.excel_filepath))
 
-    def get_dataframe_from_sheet(self, sheetname: str) -> pd.DataFrame:
+    def get_dataframe_from_sheet(self, sheet_name: str) -> pd.DataFrame:
         """Get loaded DataFrame for the given sheet name."""
         if self._dfs is None:
             raise ValueError("Data not loaded yet; call load() first.")
-        if sheetname not in self._dfs:
-            raise ValueError(f"Sheet {sheetname} not found in loaded data.")
-        return self._dfs[sheetname]
-
+        if sheet_name not in self._dfs:
+            raise ValueError(f"Sheet {sheet_name} not found in loaded data.")
+        return self._dfs[sheet_name]

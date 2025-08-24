@@ -4,8 +4,8 @@ from app.models.excel_models import DhcpInfoQueries
 from app.models.api_models import MerakiQueries
 
 TEMPLATE_NAME = "dhcp_subtree.j2"
-TEMPLATE_DIR  = "app/templates/fortigate"
-OUT_DIR       = "app/test_output_configs"
+TEMPLATE_DIR = "app/templates/fortigate"
+OUT_DIR = "app/test_output_configs"
 
 # Loads test data from an Excel file.
 dhcp_info_queries = DhcpInfoQueries('app/src/test/dhcp_info_test.xlsx')

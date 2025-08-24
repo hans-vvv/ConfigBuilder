@@ -1,10 +1,7 @@
-# TODO(medium): Add dataclasses (or pydantic models) for subtree payloads (e.g., DhcpSubnetConfig)
-# to get editor-time and runtime validation.
 from __future__ import annotations  # noqa: F401
-from functools import lru_cache
 from typing import Optional
 from dataclasses import dataclass
-from app.utils import load_all_excel_sheets
+
 
 @dataclass
 class DhcpInfo:
@@ -47,9 +44,3 @@ class NameServerTemplate:
     """
     template_name: str            # Identifier or name of the template
     name_servers: list[NameServer]  # List of associated name server objects
-
-
-@lru_cache(maxsize=1)
-def load_data(filepath: str):   
-    return load_all_excel_sheets(filepath=filepath)
-

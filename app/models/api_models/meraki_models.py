@@ -4,7 +4,6 @@ from __future__ import annotations  # noqa: F401
 from typing import Optional
 from dataclasses import dataclass, field
 
-# StaticRoute model used in MerakiApiManager
 
 @dataclass
 class StaticRoute:   

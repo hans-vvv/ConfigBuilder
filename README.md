@@ -7,13 +7,13 @@ The tool is leveraging the Model-View-Controller (MVC) architecture, therefore p
 
 ## Demos
 
-- **Meraki API Integration:**  
+- [**Meraki API Integration:**](app/demos/meraki_api_integration/README.md):**  
   Connects to the Meraki cloud using the official Meraki Python SDK to fetch static routes and DHCP server data. This is supplemented with normalized data from an Excel file. 
 
-- **Network CLI Parser:**  
+- [**Network CLI Parser:**](app/demos/network_cli_parser/README.md):**  
   Parses CLI-based network configurations, transforming them into nested Python dictionaries for further automation or conversion, powered by a [specialized parsing module](https://github.com/tdorssers/confparser).
 
-- **Golden Comparison:**
+- [**Golden Comparison:**](app/demos/golden_comparison/README.md)
   The tool runs with known input data and the generated configuration is compared against a stored “golden” output. This guarantees deterministic results and makes changes immediately visible as a text diff, so it’s clear whether an update is intentional or an unintended side-effect.
 
 

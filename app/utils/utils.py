@@ -1,9 +1,11 @@
 # TODO(medium): Add docstrings + type annotations to all helpers; promote shared DF utilities (safe_merge, coalesce).
-import os
-import pandas as pd
+import importlib
+import inspect
+import sys
 from pathlib import Path
-from typing import Type
-from dataclasses import fields, is_dataclass
+from dataclasses import fields
+
+import pandas as pd
 
 
 def read_excel_to_df(
@@ -32,22 +34,6 @@ def read_excel_to_df(
         df = df[list(fields.values())]              # then select only wanted cols
 
     return df
-
-
-def generate_excel_template(filepath: str, dataclass_types: list[Type]) -> None:
-    # Ensure parent directory exists
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    
-    with pd.ExcelWriter(filepath, engine='xlsxwriter') as writer:
-        for dc in dataclass_types:
-            if not is_dataclass(dc):
-                raise ValueError(f"{dc} is not a dataclass type")           
-            
-            col_names = [f.name for f in fields(dc)]
-            df = pd.DataFrame(columns=col_names)
-            df.to_excel(writer, sheet_name=dc.__name__, index=False)
-    
-    print(f"Excel template created at {filepath}")
 
 
 def load_all_excel_sheets(filepath: str) -> dict[str, pd.DataFrame]:
@@ -90,16 +76,16 @@ def find_project_root(start_path: Path | None = None) -> Path:
 
 
 def pprint_df(df: pd.DataFrame) -> None:
-        """
-        Pprint a pandas DataFrame 
-        """         
-        with pd.option_context(
-            'display.max_columns', None,
-            'display.max_rows', 20,
-            'display.width', 1000,
-            'display.colheader_justify', 'left'
-        ):
-            print(df)
+    """
+    Pprint a pandas DataFrame
+    """
+    with pd.option_context(
+        'display.max_columns', None,
+        'display.max_rows', 20,
+        'display.width', 1000,
+        'display.colheader_justify', 'left'
+    ):
+        print(df)
 
 
 def merge_nested_dicts(d1: dict, d2: dict) -> dict:
@@ -113,3 +99,36 @@ def merge_nested_dicts(d1: dict, d2: dict) -> dict:
         else:
             d1[key] = value
     return d1
+
+
+def create_excel_from_models(module_package_path: str, excel_output_path: str | Path) -> None:
+    """
+    Import a Python module by its package path, extract class dataclasses, and create an Excel workbook 
+    with sheets for each class and columns for attributes.
+
+    Args:
+        module_package_path (str): Python import path to the models module (e.g. 'app.models.excel_models.dhcp_info_model').
+        excel_output_path (str | Path): Absolute path where the Excel file will be saved.
+    """
+    excel_output_path = Path(excel_output_path).resolve()   
+    
+    top_level_dir = Path(__file__).parent
+    # try to locate project root containing top-level package
+    # Adjust this as per your project structure:
+    project_root = top_level_dir.parent.parent   # adjust accordingly
+    if str(project_root) not in sys.path:
+        sys.path.insert(0, str(project_root))
+
+    # Import the module by package path
+    models_module = importlib.import_module(module_package_path)
+
+    with pd.ExcelWriter(excel_output_path, engine='xlsxwriter') as writer:
+        for name, obj in inspect.getmembers(models_module, inspect.isclass):
+            # Only consider classes defined in this module
+            if obj.__module__ == models_module.__name__:
+                annotations = getattr(obj, '__annotations__', {})
+                if not annotations:
+                    continue
+                columns = list(annotations.keys())
+                df = pd.DataFrame(columns=columns)
+                df.to_excel(writer, sheet_name=name, index=False)

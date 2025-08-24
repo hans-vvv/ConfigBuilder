@@ -4,6 +4,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 from typing import Mapping, Optional
+
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 
 PathLike = str | Path

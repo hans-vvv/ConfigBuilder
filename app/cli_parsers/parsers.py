@@ -23,4 +23,3 @@ def parse_fortigate_config(config_file_path: str | Path, dissector_file_path: st
     tree = dissector.parse_str(config_text, indent=4)
 
     return dict(tree)
-

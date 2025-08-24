@@ -1,14 +1,8 @@
-# TODO(medium): Validate Excel columns at load time; raise clear error if a required column is missing.
-# Add a small schema map per sheet (name -> required columns).
 import pickle
-import pandas as pd
-
 from typing import Any
 from pathlib import Path
 
 import meraki
-
-import pandas as pd
 
 from app.app_config.secrets import MERAKI_API_KEY
 
@@ -47,9 +41,11 @@ class MerakiApiManager:
         self.dashboard = None
         self.cache_controls = MerakiCache()                   
 
-    def get_dashbord(self, api_key=MERAKI_API_KEY, print_console=False, suppress_logging=True):
+    @staticmethod
+    def get_dashboard(api_key=MERAKI_API_KEY, print_console=False, suppress_logging=True):
         return meraki.DashboardAPI(
             api_key=api_key, print_console=print_console, suppress_logging=suppress_logging,
-        ) 
+        )
+
 
 get_meraki_api = MerakiApiManager()
