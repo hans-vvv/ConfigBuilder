@@ -4,7 +4,7 @@ import sys, difflib
 ROOT = Path(__file__).resolve().parents[2]  # repo root (two levels up from tests/dhcp)
 sys.path.insert(0, str(ROOT))
 
-from app.views.test_dhcp_view import merged_data, TEMPLATE_NAME, TEMPLATE_DIR
+from app.views.test_create_ftg_dhcp_server_cfg import merged_data, TEMPLATE_NAME, TEMPLATE_DIR
 from app.printers.printer import Printer
 
 # ---- config ----

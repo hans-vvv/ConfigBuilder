@@ -10,7 +10,6 @@ import meraki
 
 import pandas as pd
 
-from app.models.api_models import StaticRoute
 from app.app_config.secrets import MERAKI_API_KEY
 
 

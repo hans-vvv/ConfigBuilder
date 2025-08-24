@@ -5,10 +5,10 @@
     parent: scope
     child:
     - match: set default-gateway (?P<def_gw>.*)
-    - match: set netmask (?P<mask>.*)
+    - match: set netmask (?P<netmask>.*)
     - match: set interface (?P<interface>.*)
     - match: set dns-server\d (.*)
-      parent: dns_servers          
+      parent: dns_servers               
     - match: config ip-range 
       name: ip-ranges     
       child:

@@ -1,28 +1,26 @@
-import os
+from pathlib import Path
 from .confparser import Dissector
 
 
-def parse_fortigate_config(config_text: str) -> dict:
+def parse_fortigate_config(config_file_path: str | Path, dissector_file_path: str | Path) -> dict:
     """
-    Parse a FortiGate style configuration text and return a nested dictionary tree.
+    Parse a FortiGate style configuration file at the given path using a dissector YAML file.
 
     Args:
-        config_text: The raw FortiGate config as a single string.
+        config_file_path (str | Path): Absolute or relative path to the FortiGate config file.
+        dissector_file_path (str | Path): Absolute or relative path to the dissector YAML.
 
     Returns:
         Nested dict representing the parsed config.
     """
+    config_path = Path(config_file_path).expanduser().resolve()
+    dissector_path = Path(dissector_file_path).expanduser().resolve()
 
-    # Locate dissector YAML relative to this file
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    # base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    dissector_path = os.path.join(base_dir, 'templates', 'fortigate', 'fortigate_dissector.yaml')
+    config_text = config_path.read_text(encoding='utf-8')
 
-    # Load the dissector from YAML file
-    dissector = Dissector.from_file(dissector_path)
+    dissector = Dissector.from_file(str(dissector_path))
 
-    # Parse the config text 4 space indentation
     tree = dissector.parse_str(config_text, indent=4)
 
-    return dict(tree)  # convert Tree (dict subclass) to plain dict
+    return dict(tree)
 

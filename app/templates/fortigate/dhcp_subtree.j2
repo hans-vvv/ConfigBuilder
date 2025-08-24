@@ -3,7 +3,7 @@ config system dhcp server
 {% set ns = namespace(counter=10) %}
 {% for subnet, subnet_items in sub_tree.items() %}
     edit {{ ns.counter }}
-        set default-gateway {{ subnet_items.gwip }}
+        set default-gateway {{ subnet_items.gw_ip }}
         set netmask {{ subnet_items.netmask }}
         set interface "Interco_vlan920"
         config ip-range

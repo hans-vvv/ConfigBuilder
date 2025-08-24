@@ -31,7 +31,7 @@ class Printer:
         trim_blocks: bool = True,
         lstrip_blocks: bool = True,
         render_per_primary_key: bool = True,
-        filename_suffix: str = "-cfg",
+        filename_suffix: str = ".cfg",
         autoload_env: bool = False,  # build Jinja env now or lazily in render()
     ) -> None:
         self.config_tree: Mapping = config_tree

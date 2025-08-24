@@ -2,7 +2,7 @@ import ipaddress
 import pandas as pd
 from typing import Any
 from app.api import get_meraki_api
-from app.models.api_models import StaticRoute
+
 
 class MerakiQueries:
 
@@ -92,6 +92,7 @@ class MerakiQueries:
                     network_name = network.get('name', '')
 
                     try:
+                        from app.models.api_models import StaticRoute
                         routes = self.dashboard.appliance.getNetworkApplianceStaticRoutes(network_id)
                         for route in routes:
                             static_routes.append(
@@ -156,8 +157,8 @@ class MerakiQueries:
         mock_data: dict[str, dict[str, Any]] = {
             "BRUSSELS": {
                 "sub-1": {
-                    "enabled": True,
-                    "subnet": "1.1.1.0/24",
+                    "enabled": True,                    
+                    "netmask": "255.255.255.0",
                     "fixed_ip_assignments": [
                         {"ip": "1.1.1.11", "mac": "04:42:1a:c9:99:9b", "description": "test1"},
                         {"ip": "1.1.1.12", "mac": "04:42:1a:c9:c9:9b", "description": "test2"},
@@ -171,7 +172,7 @@ class MerakiQueries:
                 },
                 "sub-2": {
                     "enabled": True,
-                    "subnet": "2.2.2.0/24",
+                    "netmask": "255.255.255.0",
                     "fixed_ip_assignments": [
                         {"ip": "2.2.2.11", "mac": "05:42:1a:c9:99:9b", "description": "test3"},
                         {"ip": "2.2.2.12", "mac": "05:42:1a:c9:c9:9b", "description": "test4"},

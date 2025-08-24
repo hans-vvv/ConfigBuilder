@@ -1,4 +1,5 @@
-from app.views import test_create_ftg_dhcp_server_cfg
+# from app.views import test_create_ftg_dhcp_server_cfg
+from app.views import demo_parse_ftg_dhcp_server_cfg
 # from app.models import meraki_models
 # from app.models import StaticRoute
 # from app.core.utils import generate_excel_template
@@ -13,7 +14,10 @@ from app.views import test_create_ftg_dhcp_server_cfg
 
 def main():  
 
-    test_create_ftg_dhcp_server_cfg.run()
+    # test_create_ftg_dhcp_server_cfg.run()
+    demo_parse_ftg_dhcp_server_cfg.run()
+    
+    
 
     # dataclasses = [
     #     DhcpInfo,    
