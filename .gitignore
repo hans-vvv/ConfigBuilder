@@ -4,7 +4,6 @@
 
 # Custom entries
 output_configs/
-*.xlsx
 test_configs/
 
 # Ignore everything under app/src/production
