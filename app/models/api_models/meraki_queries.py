@@ -2,7 +2,7 @@ import ipaddress
 import pandas as pd
 from typing import Any
 from app.api import get_meraki_api
-from app.models import StaticRoute
+from app.models.api_models import StaticRoute
 
 class MerakiQueries:
 

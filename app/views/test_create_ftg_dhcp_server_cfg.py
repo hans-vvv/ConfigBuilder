@@ -1,14 +1,14 @@
-from app.core.utils import merge_nested_dicts
+from app.utils import merge_nested_dicts
 
-from app.models import DhcpInfoQueries
-from app.models import MerakiQueries
+from app.models.excel_models import DhcpInfoQueries
+from app.models.api_models import MerakiQueries
 
 TEMPLATE_NAME = "dhcp_subtree.j2"
 TEMPLATE_DIR  = "app/templates/fortigate"
 OUT_DIR       = "output_configs"
 
 # Loads test data from an Excel file.
-dhcp_info_queries = DhcpInfoQueries('src/dhcp_info_test.xlsx')
+dhcp_info_queries = DhcpInfoQueries('src/test/dhcp_info_test.xlsx')
 dhcp_info_data = dhcp_info_queries.get_dhcp_info_data()
 
 # Loads Meraki test data

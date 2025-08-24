@@ -1,5 +1,5 @@
 import pandas as pd
-from app.core.utils import pprint_df
+from app.utils import pprint_df
 from .base_excel_data_loader import BaseExcelDataLoader
 
 class DhcpInfoQueries(BaseExcelDataLoader):

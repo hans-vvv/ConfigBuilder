@@ -1,1 +1,1 @@
-from .meraki_loader import *
+from .meraki_loader import MerakiApiManager

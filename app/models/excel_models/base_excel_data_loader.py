@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional, Dict
 import pandas as pd
-from app.core.utils import load_all_excel_sheets, find_project_root
+from app.utils import load_all_excel_sheets, find_project_root
 
 
 class BaseExcelDataLoader:

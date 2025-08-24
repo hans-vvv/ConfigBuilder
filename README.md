@@ -1,7 +1,7 @@
-# # ConfigBuilder
-“I’ve run network projects for enterprises and service providers for 20+ years. In recent years I’ve been building automation scripts in Python to solve all kinds of problems. This is an attempt to build my personal toolkit to solve the problems in a structured way. I have added some realistic challenges to show how the tool can be used.
+# # Overview
+I have run network projects for enterprises and service providers for 20+ years. In recent years I’ve been building automation scripts in Python to solve all kinds of problems. My experience so far is that data sources are mostly really messy or complex to interper and therefor custom scripting remains nessesary. This is my first attempt to build my personal toolkit and to solve problems in a structured way. I have added some real realistic challenges to demo how the tool can be used.
 
- By leveraging the Model-View-Controller (MVC) architecture, the tool provides a clean, scalable, and maintainable solution. Using MVC allows the project to organize core functionalities into separate modules and folders—making it easy to extend, maintain, and build new features without entangling business logic, data handling, and presentation layers.
+The tool is leveraging the Model-View-Controller (MVC) architecture, therefore provides a clean, scalable, and maintainable solution. Using MVC allows the project to organize core functionalities into separate modules and folders—making it easy to extend, maintain, and build new features without entangling business logic, data handling, and presentation layers.
 
 ---
 
@@ -14,7 +14,7 @@
   Reads and interprets network-related data from Excel, converting them into pandas DataFrames supported by the rest of the system.
 
 - **Config Generation via Templates:**  
-  Uses Jinja2 templating to generate network configuration files from simplified, easily consumable data structures, making it straightforward to create vendor-specific configs.
+  Uses Jinja2 templating to generate network configuration files from easily consumable data structures, making it straightforward to create vendor-specific configs. The heavy lifting to achvieve is done in Python code.
 
 - **Network CLI Parser:**  
   Parses CLI-based network configurations, transforming them into nested Python dictionaries for further automation or conversion, powered by a [specialized parsing module](https://github.com/tdorssers/confparser).

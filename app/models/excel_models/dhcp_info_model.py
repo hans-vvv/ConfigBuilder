@@ -4,7 +4,7 @@ from __future__ import annotations  # noqa: F401
 from functools import lru_cache
 from typing import Optional
 from dataclasses import dataclass
-from app.core.utils import load_all_excel_sheets
+from app.utils import load_all_excel_sheets
 
 @dataclass
 class DhcpInfo:
