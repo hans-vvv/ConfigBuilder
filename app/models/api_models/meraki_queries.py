@@ -19,7 +19,7 @@ class MerakiQueries:
   
     def _load_env(self) -> None:
         """Initialize the Meraki dashboard API client."""
-        self.dashboard = self.meraki_api.get_dashbord() 
+        self.dashboard = self.meraki_api.get_dashboard() 
     
     @staticmethod
     def _subnet_details(subnet: str) -> dict:

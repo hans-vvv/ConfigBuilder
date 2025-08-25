@@ -6,5 +6,6 @@ DISSECTOR_FILE = 'app/templates/fortigate/fortigate_dissector.yaml'
 
 config_tree = parse_fortigate_config(CFG_FILE, DISSECTOR_FILE)
 
+
 def run():
     print(json.dumps(config_tree, indent=4))

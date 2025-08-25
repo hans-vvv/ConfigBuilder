@@ -13,13 +13,6 @@ HERE = Path(__file__).resolve().parent
 GOLDEN_PATH = HERE / "golden" / f"{SITE}.conf"
 # ---------------
 
-def _norm(s: str) -> str:
-    s = s.replace("\r\n", "\n")
-    s = "\n".join(line.rstrip() for line in s.split("\n"))
-    if not s.endswith("\n"):
-        s += "\n"
-    return s
-
 def main() -> int:    
     accept = "--accept" in sys.argv    
 
@@ -57,6 +50,14 @@ def main() -> int:
     )
     print(f"[DIFF] {SITE} differs:\n{''.join(diff)}")
     return 1
+
+
+def _norm(s: str) -> str:
+    s = s.replace("\r\n", "\n")
+    s = "\n".join(line.rstrip() for line in s.split("\n"))
+    if not s.endswith("\n"):
+        s += "\n"
+    return s
 
 if __name__ == "__main__":
     raise SystemExit(main())
