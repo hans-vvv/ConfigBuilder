@@ -1,3 +1,5 @@
+import json
+
 from app.utils import merge_nested_dicts
 
 from app.models.excel_models import DhcpInfoQueries
@@ -18,6 +20,8 @@ meraki_data = meraki_queries.get_mock_meraki_data()
 
 def merged_data():
     return merge_nested_dicts(dhcp_info_data, meraki_data)
+
+# print(json.dumps(merged_data(), indent=4))
 
 def run() -> None:
 

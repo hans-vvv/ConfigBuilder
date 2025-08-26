@@ -46,7 +46,6 @@ Create a view that combines normalized data from both Excel and API queries for 
 - So the result is based on the test Excel file and mocked data from the Meraki API query class. 
 - The printer class uses Jinja2 library to render the configuration dict.
 - The Jinja2 template can be found [here](../../templates/fortigate/dhcp_subtree.j2)
-- For simplicity only data for one site was provided. Per site a separate config is rendered.
 
 ### Step 7: Print the configuration
 

@@ -2,6 +2,9 @@ config system dhcp server
 
 {% set ns = namespace(counter=10) %}
 {% for subnet, subnet_items in sub_tree.items() %}
+{% if subnet_items.gw_ip is not defined %}
+    {% continue %}
+{% endif %}
     edit {{ ns.counter }}
         set default-gateway {{ subnet_items.gw_ip }}
         set netmask {{ subnet_items.subnet_details.netmask }}
@@ -17,12 +20,17 @@ config system dhcp server
             edit {{loop.index}}
                 set code {{ item.code }}
                 set type {{ item.type }}
+{% if item.type != 'ip' %}
                 set value {{ item.value }}
+{% else %}
+                set ip {{ item.value }}
+{% endif %}
             next
 {% if loop.last %}
         end
 {% endif %}
 {% endfor %}
+{% if subnet_items.reserved_ip_ranges %}
         config exclude-range
 {% for item in subnet_items.reserved_ip_ranges %}
             edit {{loop.index}}
@@ -33,6 +41,7 @@ config system dhcp server
         end
 {% endif %}
 {% endfor %}
+{% endif %}
 {% if subnet_items.static_bindings %}
         config reserved-address
 {% for item in subnet_items.static_bindings %}

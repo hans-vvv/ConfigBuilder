@@ -113,6 +113,7 @@ class Printer:
                 loader=FileSystemLoader(str(self.template_dir)),
                 trim_blocks=self.trim_blocks,
                 lstrip_blocks=self.lstrip_blocks,
+                extensions=['jinja2.ext.loopcontrols'],
             )
 
     def _plan_per_primary_key(self, config_tree: Mapping) -> dict[str, dict]:

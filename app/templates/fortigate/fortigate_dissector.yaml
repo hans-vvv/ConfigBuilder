@@ -24,6 +24,7 @@
         - match: set code (?P<code>.*)
         - match: set type (?P<type>.*)
         - match: set value (?P<value>.*)
+        - match: set ip (?P<ip>.*)
     - match: config reserved-address
       name: reserved_addresses
       child: 

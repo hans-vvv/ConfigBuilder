@@ -20,6 +20,8 @@ meraki_data = meraki_queries.get_static_routes(site_name=SITE, use_cache=True)
 def merged_data():    
     return merge_nested_dicts(dhcp_info_data, meraki_data)
 
+# print(json.dumps(merged_data(), indent=4))
+
 
 def run() -> None:
     

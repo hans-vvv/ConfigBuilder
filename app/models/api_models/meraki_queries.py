@@ -46,13 +46,14 @@ class MerakiQueries:
 
     @staticmethod
     def _extract_reserved_ranges(reserved_ranges: list[dict]) -> list[dict]:
-        """Helper to extract info from a given DataFrame row."""
+        """Helper to extract info from a given dict."""
         ranges = []        
         for reserved_range in reserved_ranges:
             start, end = reserved_range.get("start"), reserved_range.get("end")
             if start and end:
                 ranges.append({"start": start, "end": end})
-        return ranges
+        return ranges  
+    
 
     def _load_static_routes_df(self, use_cache: bool) -> pd.DataFrame:        
         """Fetch static routes from Meraki API or cache as a pandas DataFrame.
@@ -163,11 +164,11 @@ class MerakiQueries:
                 "sub-1": {
                     "enabled": True,                    
                     "netmask": "255.255.255.0",
-                    "fixed_ip_assignments": [
+                    "static_bindings": [
                         {"ip": "1.1.1.11", "mac": "04:42:1a:c9:99:9b", "description": "test1"},
                         {"ip": "1.1.1.12", "mac": "04:42:1a:c9:c9:9b", "description": "test2"},
                     ],
-                    "reserved_ip_ranges": [
+                    "excluded_ip_ranges": [
                         {"start": "1.1.1.1", "end": "1.1.1.10"}
                     ], 
                     "subnet_details": {
@@ -179,16 +180,16 @@ class MerakiQueries:
                 "sub-2": {
                     "enabled": True,
                     "netmask": "255.255.255.0",
-                    "fixed_ip_assignments": [
+                    "static_bindings": [
                         {"ip": "2.2.2.11", "mac": "05:42:1a:c9:99:9b", "description": "test3"},
                         {"ip": "2.2.2.12", "mac": "05:42:1a:c9:c9:9b", "description": "test4"},
                     ],
-                    "reserved_ip_ranges": [
+                    "excluded_ip_ranges": [
                         {"start": "2.2.2.1", "end": "2.2.2.10"}
                     ],
                     "subnet_details": {
                         "netmask": "255.255.255.0",
-                        "start_ip": "2.2.2.2",
+                        "start_ip": "2.2.2.1",
                         "end_ip": "2.2.2.254",
                     },   
                 }
