@@ -4,12 +4,12 @@ config system dhcp server
 {% for subnet, subnet_items in sub_tree.items() %}
     edit {{ ns.counter }}
         set default-gateway {{ subnet_items.gw_ip }}
-        set netmask {{ subnet_items.netmask }}
+        set netmask {{ subnet_items.subnet_details.netmask }}
         set interface "Interco_vlan920"
         config ip-range
             edit 1
-                set start-ip {{ subnet_items.start_ip }}
-                set end-ip {{ subnet_items.end_ip }}
+                set start-ip {{ subnet_items.subnet_details.start_ip }}
+                set end-ip {{ subnet_items.subnet_details.end_ip }}
             next
         end
         config options

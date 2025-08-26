@@ -22,43 +22,36 @@ class MerakiQueries:
         self.dashboard = self.meraki_api.get_dashboard() 
     
     @staticmethod
-    def _subnet_details(subnet: str) -> dict:
-        """Helper to extract info from a given subnet in CIDR notation."""
-        try:
-            if not subnet:
-                return {k: None for k in ("netmask", "start_ip", "end_ip")}
-            net = ipaddress.ip_network(subnet, strict=False)
-            hosts = list(net.hosts())
-            low = str(hosts[0]) if hosts else None
-            high = str(hosts[-1]) if hosts else None
-            return {
-                "netmask": str(net.netmask),
-                "start_ip": high,
-                "end_ip": low                
-            }
-        except ValueError:
-            return {k: None for k in ("netmask", "start_ip", "end_ip")}
+    def _subnet_details(subnet: str) -> dict[str, str|None]:
+        """Helper to extract info from a given subnet in CIDR notation."""                
+        net = ipaddress.ip_network(subnet, strict=False)
+        hosts = list(net.hosts())
+        low = str(hosts[0]) if hosts else None
+        high = str(hosts[-1]) if hosts else None
+        return {
+            "netmask": str(net.netmask),
+            "start_ip": low,
+            "end_ip": high             
+        }
+        
     
     @staticmethod
-    def _static_bindings(df_row: pd.Series) -> list[dict]:
+    def _static_bindings(raw_bindings: dict) -> list[dict]:
         """Helper to extract info from a given DataFrame row."""
-        bindings = []
-        fia = getattr(df_row, "fixed_ip_assignments", None)
-        if isinstance(fia, dict):
-            for mac, info in fia.items():
-                bindings.append({"ip": info.get("ip"), "mac": mac, "description": info.get("name")})
+        bindings = []        
+        if isinstance(raw_bindings, dict):
+            for mac, info in raw_bindings.items():
+                bindings.append({"ip": info.get("ip"), "mac": mac, "description": info.get("name")})        
         return bindings
 
     @staticmethod
-    def _extract_reserved_ranges(df_row: pd.Series) -> list[dict]:
+    def _extract_reserved_ranges(reserved_ranges: list[dict]) -> list[dict]:
         """Helper to extract info from a given DataFrame row."""
-        ranges = []
-        rir = getattr(df_row, "reserved_ip_ranges", None)
-        if isinstance(rir, list):
-            for r in rir:
-                start, end = r.get("start"), r.get("end")
-                if start and end:
-                    ranges.append({"start": start, "end": end})
+        ranges = []        
+        for reserved_range in reserved_ranges:
+            start, end = reserved_range.get("start"), reserved_range.get("end")
+            if start and end:
+                ranges.append({"start": start, "end": end})
         return ranges
 
     def _load_static_routes_df(self, use_cache: bool) -> pd.DataFrame:        
@@ -81,8 +74,8 @@ class MerakiQueries:
             if self.cached_data["static_routes"] is not None:                
                 return self.cached_data["static_routes"]
             else:
-                raise RuntimeError("No cached data available, first run from source and don't use cache")
-
+                raise RuntimeError("No cached data available, first run from source and don't use cache")        
+        
         static_routes = []
 
         try:
@@ -96,7 +89,7 @@ class MerakiQueries:
                     try:
                         from app.models.api_models import StaticRoute
                         routes = self.dashboard.appliance.getNetworkApplianceStaticRoutes(network_id)
-                        for route in routes:
+                        for route in routes:                            
                             static_routes.append(
                                 StaticRoute(                                    
                                     network_name=network_name,
@@ -119,7 +112,7 @@ class MerakiQueries:
             self.meraki_api.cache_controls.save("static_routes", static_routes)
         return static_routes
     
-    def get_static_routes(self, use_cache: bool = True) -> dict[str, dict[str, Any | None]]:  # type: ignore
+    def get_static_routes(self, site_name: str, use_cache: bool = True) -> dict[str, dict[str, Any ]]:  # type: ignore
         """Get static routes, optionally using cached data.
 
         Args:
@@ -135,14 +128,22 @@ class MerakiQueries:
             network_name = getattr(row, "network_name", None)
             subnet_name = getattr(row, "subnet_name", None)
 
+            if site_name != network_name:
+                continue
+
             if network_name not in result:
                 result[network_name] = {}
             
+            # print(getattr(row, "fixed_ip_assignments", None))
+            # print(self._static_bindings(getattr(row, "fixed_ip_assignments", {}))) 
+            # print((getattr(row, "reserved_ip_ranges", None)))
+            # print(self._subnet_details(getattr(row, "subnet", str)))
+            
             result[network_name][subnet_name] = {
                 "enabled": getattr(row, "enabled", True),
-                "subnet_details": self._subnet_details(getattr(row, "subnet", None)),  # type: ignore
-                "static_bindings": self._static_bindings(getattr(row, "fixed_ip_assignments", None)),  # type: ignore
-                "reserved_ranges": self._extract_reserved_ranges(getattr(row, "reserved_ip_ranges", None))  # type: ignore
+                "subnet_details": self._subnet_details(getattr(row, "subnet", "")), 
+                "static_bindings": self._static_bindings(getattr(row, "fixed_ip_assignments", {})),
+                "reserved_ranges": self._extract_reserved_ranges(getattr(row, "reserved_ip_ranges", []))
             }
         return result
     
@@ -157,6 +158,7 @@ class MerakiQueries:
         This mimics the structure of StaticRoute instances grouped by network and subnet.
         """
         mock_data: dict[str, dict[str, Any]] = {
+
             "BRUSSELS": {
                 "sub-1": {
                     "enabled": True,                    
@@ -167,11 +169,13 @@ class MerakiQueries:
                     ],
                     "reserved_ip_ranges": [
                         {"start": "1.1.1.1", "end": "1.1.1.10"}
-                    ],
-                    "start_ip": "1.1.1.1",
-                    "end_ip": "1.1.1.254",
-                    "comment": ""
-                },
+                    ], 
+                    "subnet_details": {
+                        "netmask": "255.255.255.0",
+                        "start_ip": "1.1.1.1",
+                        "end_ip": "1.1.1.254",
+                    }
+                },                               
                 "sub-2": {
                     "enabled": True,
                     "netmask": "255.255.255.0",
@@ -182,9 +186,11 @@ class MerakiQueries:
                     "reserved_ip_ranges": [
                         {"start": "2.2.2.1", "end": "2.2.2.10"}
                     ],
-                    "start_ip": "2.2.2.1",
-                    "end_ip": "2.2.2.254",
-                    "comment": ""
+                    "subnet_details": {
+                        "netmask": "255.255.255.0",
+                        "start_ip": "2.2.2.2",
+                        "end_ip": "2.2.2.254",
+                    },   
                 }
             }
         }

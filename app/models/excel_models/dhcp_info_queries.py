@@ -107,7 +107,7 @@ class DhcpInfoQueries(BaseExcelDataLoader):
 
         return results
     
-    def get_dhcp_info_data(self):
+    def get_dhcp_info_data(self, site_name: str ):
 
         result = {}
         
@@ -124,6 +124,9 @@ class DhcpInfoQueries(BaseExcelDataLoader):
 
             network_name = getattr(row, 'network_name', '')
             subnet_name = getattr(row, 'subnet_name', '')
+
+            if network_name != site_name:
+                continue
 
             if network_name not in result:
                 result[network_name] = {}

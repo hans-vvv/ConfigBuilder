@@ -6,14 +6,7 @@
 output_configs/
 test_configs/
 old/
-
-# Ignore everything under app/src/production
-app/src/production/
-
-# But track everything else
-!app/src/test/
-!app/src/barebone/
-
+src/
 
 
 
