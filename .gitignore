@@ -6,7 +6,8 @@
 output_configs/
 test_configs/
 old/
-src/
+/src/
+!/app/src/
 
 
 
