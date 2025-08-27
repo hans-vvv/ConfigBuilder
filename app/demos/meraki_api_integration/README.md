@@ -22,7 +22,7 @@ Generate an empty Excel file based on your models.
 ### Step 3: Fill in the Demo Data
 
 Populate your Excel file with test data.  
-- The filled in Excel file is located [here](../../src/test/dhcp_info_test.xlsx) 
+- The filled in Excel file is located [here](../../src/mock_data/dhcp_info_mock.xlsx) 
 
 ### Step 4: Create Queries to Extract Needed Data
 
@@ -34,7 +34,7 @@ Build query classes to extract relevant data from the Excel sheets.
 
 Implement queries to fetch data from the Meraki API.  
 - See: [Meraki API Queries](../../models/api_models/meraki_queries.py)  
-- Mocked data method is used in the demo to facilitate Golden Tests later on.
+- Mocked data is produced [here](../../src/mock_data/meraki_mock_data.py) 
 - Pandas library is used here too.
 
 ### Step 6: Create View to Generate Fortigate DHCP Server Configurations
@@ -43,7 +43,7 @@ Create a view that combines normalized data from both Excel and API queries for 
 - See: [View: test_create_ftg_dhcp_server_cfg.py](../../views/test_create_ftg_dhcp_server_cfg.py)  
 - The two query instances returns normalized dicts that are merged into another dict.
 - The purpose of this view is to facilitate the Golden Test. Therefor the name of the file is prefixed with test/.
-- So the result is based on the test Excel file and mocked data from the Meraki API query class. 
+- So the result is based on the test Excel file Meraki mocked data.
 - The printer class uses Jinja2 library to render the configuration dict.
 - The Jinja2 template can be found [here](../../templates/fortigate/dhcp_subtree.j2)
 

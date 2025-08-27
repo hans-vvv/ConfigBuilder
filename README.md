@@ -23,13 +23,3 @@ data handling, and presentation layers.
 
 - [**Golden Comparison:**](app/demos/golden_comparison/README.md)
   The tool runs with known input data and the generated configuration is compared against a stored “golden” output. This guarantees deterministic results and makes changes immediately visible as a text diff, so it’s clear whether an update is intentional or an unintended side-effect.
-
-
-TO DO:
-- Exception handling (high)
-- Doc strings plus annotations everywhere (high)
-- PyPi (medium)
-- Gui (medium)
-- Logging (medium)
-
-

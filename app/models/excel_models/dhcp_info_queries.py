@@ -1,4 +1,5 @@
 import pandas as pd
+from typing import Any
 
 from .base_excel_data_loader import BaseExcelDataLoader
 
@@ -107,7 +108,12 @@ class DhcpInfoQueries(BaseExcelDataLoader):
 
         return results
     
-    def get_dhcp_info_data(self, site_name: str ):
+    def get_dhcp_info_data(self, site_name: str) -> dict[dict[str, str], str | Any]:
+
+        """
+        :param site_name: required argument
+        :return: dict with transformed data
+        """
 
         result = {}
         

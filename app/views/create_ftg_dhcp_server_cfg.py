@@ -17,6 +17,7 @@ dhcp_info_data = dhcp_info_queries.get_dhcp_info_data(site_name=SITE)
 meraki_queries = MerakiQueries()
 meraki_data = meraki_queries.get_static_routes(site_name=SITE, use_cache=True)
 
+
 def merged_data():    
     return merge_nested_dicts(dhcp_info_data, meraki_data)
 
@@ -32,9 +33,4 @@ def run() -> None:
         template_dir=TEMPLATE_DIR,
         output_dir=OUT_DIR,
     )
-    printer.render_to_files()  
-
-
-
-
-
+    printer.render_to_files()

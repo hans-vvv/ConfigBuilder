@@ -1,11 +1,9 @@
+import sys
+import difflib
 from pathlib import Path
-import sys, difflib
 
 ROOT = Path(__file__).resolve().parents[2]  # repo root (two levels up from tests/dhcp)
 sys.path.insert(0, str(ROOT))
-
-from app.views.test_create_ftg_dhcp_server_cfg import merged_data, TEMPLATE_NAME, TEMPLATE_DIR
-from app.printers.printer import Printer
 
 # ---- config ----
 SITE = "BRUSSELS"
@@ -13,8 +11,12 @@ HERE = Path(__file__).resolve().parent
 GOLDEN_PATH = HERE / "golden" / f"{SITE}.conf"
 # ---------------
 
+
 def main() -> int:    
-    accept = "--accept" in sys.argv    
+    accept = "--accept" in sys.argv
+
+    from app.views.test_create_ftg_dhcp_server_cfg import merged_data, TEMPLATE_NAME, TEMPLATE_DIR
+    from app.printers.printer import Printer
 
     printer = Printer(
         config_tree=merged_data(),
@@ -58,6 +60,7 @@ def _norm(s: str) -> str:
     if not s.endswith("\n"):
         s += "\n"
     return s
+
 
 if __name__ == "__main__":
     raise SystemExit(main())
