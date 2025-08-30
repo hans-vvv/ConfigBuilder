@@ -1,6 +1,6 @@
 # # Overview
 
-I have have participated in network projects for enterprises and service providers for over 20 years. In recent years, I’ve
+I have participated in network projects for enterprises and service providers for over 20 years. In recent years, I’ve
 been building automation scripts in Python to address a wide range of challenges. My experience so far is
 that data sources are often messy or complex to interpret, and therefore custom scripting remains necessary.
 This is my first attempt to build a personal toolkit to solve problems in a more structured way. I’ve also
